@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: safefam
+  datasource:
+    url: jdbc:postgresql://localhost:5432/safefam
+    username: postgres
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
