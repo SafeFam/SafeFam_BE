@@ -47,6 +47,7 @@ IntelliJ 상단 → **Run** → **Edit Configurations** → **Environment variab
 DB_PASSWORD=설치시설정한비밀번호;
 JWT_SECRET=c2FmZWZhbS1zZWNyZXQta2V5LWZvci1qd3QtYXV0aGVudGljYXRpb24=
 ```
+> ⚠️ JWT_SECRET은 개발용 키입니다. 운영 배포 시 반드시 새로운 키로 교체해야 합니다.
 
 ## 4. 실행
 
