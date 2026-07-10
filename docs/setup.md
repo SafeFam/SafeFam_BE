@@ -44,7 +44,8 @@ CREATE DATABASE safefam;
 
 IntelliJ 상단 → **Run** → **Edit Configurations** → **Environment variables** 에 추가:
 ```
-DB_PASSWORD=설치시설정한비밀번호
+DB_PASSWORD=설치시설정한비밀번호;
+JWT_SECRET=c2FmZWZhbS1zZWNyZXQta2V5LWZvci1qd3QtYXV0aGVudGljYXRpb24=
 ```
 
 ## 4. 실행
