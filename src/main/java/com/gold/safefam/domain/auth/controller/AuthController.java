@@ -15,10 +15,19 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 로그인 요청이 들어오면 AuthController에서 처리
+ * AuthService에서 이메일/비밀번호 확인
+ * JwtUtil에서 Access/Refresh Token 생성
+ * Refresh Token 해시를 DB에 저장
+ * 토큰 반환
+ */
 
 @Tag(name = "1. 인증", description = "회원가입, 로그인 및 JWT 관리")
 @RequiredArgsConstructor
@@ -39,13 +48,15 @@ public class AuthController {
     @Operation(summary = "로그인", description = "인증 성공 시 Access Token과 Refresh Token을 발급합니다.")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        TokenResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success("로그인에 성공했습니다.", response));
     }
 
     @Operation(summary = "Access Token 재발급", description = "유효한 Refresh Token으로 토큰을 재발급합니다.")
     @PostMapping("/reissue")
     public ResponseEntity<ApiResponse<TokenResponse>> reissue(@Valid @RequestBody ReissueRequest request) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        TokenResponse response = authService.reissue(request.refreshToken());
+        return ResponseEntity.ok(ApiResponse.success("토큰이 재발급되었습니다.", response));
     }
 
     @Operation(
@@ -54,7 +65,11 @@ public class AuthController {
             security = @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
     )
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody LogoutRequest request) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody LogoutRequest request
+    ) {
+        authService.logout(userId, request.refreshToken());
+        return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다."));
     }
 }

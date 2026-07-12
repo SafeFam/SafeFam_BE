@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,22 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+
+/**
+ * 모든 HTTP 요청에서 JWT 인증을 처리하는 필터
+ *
+ * Authorization: Bearer ...에서 토큰 추출
+ * 서명 및 만료 검증
+ * ACCESS 토큰만 인증에 사용
+ * 토큰의 사용자 ID를 principal로 등록
+ * 토큰의 역할을 ROLE_USER 또는 ROLE_ADMIN 권한으로 변환
+ * 인증 객체를 SecurityContextHolder에 등록
+ * Claim이 잘못된 토큰은 인증 처리하지 않고 Context 초기화
+ *
+ *
+ * Refresh Token을 Authorization 헤더에 넣어도
+ * 로그인된 것으로 처리되지 않음!
+ */
 
 @Component
 @RequiredArgsConstructor
@@ -28,10 +45,21 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
-            Long userId = jwtUtil.getUserId(token);
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, List.of());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            try {
+                if (jwtUtil.getTokenType(token) == TokenType.ACCESS) {
+                    Long userId = jwtUtil.getUserId(token);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userId,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority(
+                                            "ROLE_" + jwtUtil.getRole(token).name()))
+                            );
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (RuntimeException ignored) {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         filterChain.doFilter(request, response);
