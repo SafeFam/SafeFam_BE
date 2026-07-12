@@ -16,7 +16,7 @@ RUN ./gradlew bootJar -x test --no-daemon
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# 빌드 스테이지에서 생성된 JAR 파일만 쏙 빼오기
+# 빌드 스테이지에서 생성된 JAR 파일만 가져오기
 COPY --from=builder /workspace/build/libs/*-SNAPSHOT.jar app.jar
 
 # Spring Boot 기본 포트 개방
