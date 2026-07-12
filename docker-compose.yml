@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  spring-backend:
+    build: .
+    container_name: safefam-spring-server
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - AI_SERVER_URL=http://localhost:8000
+      - JWT_SECRET=${JWT_SECRET}

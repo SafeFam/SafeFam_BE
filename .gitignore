@@ -38,3 +38,5 @@ out/
 
 ### Local PostgreSQL ###
 postgres-start.log
+
+.env
