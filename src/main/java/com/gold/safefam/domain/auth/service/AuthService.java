@@ -32,6 +32,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final PhoneVerificationService phoneVerificationService;
 
     // 회원가입
     @Transactional
@@ -43,9 +44,15 @@ public class AuthService {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
 
+        // 인증 완료 기록을 소비해 동일한 인증 결과가 여러 계정에 재사용되지 않게 함
+        String phoneNumber = phoneVerificationService.consumeVerified(request.phoneNumber());
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
+        }
+
         // 비밀번호 BCrypt 암호화
         String encodedPassword = passwordEncoder.encode(request.password());
-        User user = new User(email, encodedPassword, request.name());
+        User user = new User(email, encodedPassword, request.name(), phoneNumber);
         userRepository.save(user);
     }
 

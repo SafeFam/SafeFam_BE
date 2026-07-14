@@ -3,9 +3,12 @@ package com.gold.safefam.domain.auth.controller;
 import com.gold.safefam.domain.auth.dto.LoginRequest;
 import com.gold.safefam.domain.auth.dto.LogoutRequest;
 import com.gold.safefam.domain.auth.dto.ReissueRequest;
+import com.gold.safefam.domain.auth.dto.SendPhoneVerificationRequest;
 import com.gold.safefam.domain.auth.dto.SignupRequest;
 import com.gold.safefam.domain.auth.dto.TokenResponse;
+import com.gold.safefam.domain.auth.dto.VerifyPhoneRequest;
 import com.gold.safefam.domain.auth.service.AuthService;
+import com.gold.safefam.domain.auth.service.PhoneVerificationService;
 import com.gold.safefam.global.config.SwaggerConfig;
 import com.gold.safefam.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +39,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final PhoneVerificationService phoneVerificationService;
+
+    // 회원가입 전에 휴대폰 소유 여부를 확인하기 위한 인증번호 발송
+    @Operation(summary = "휴대폰 인증번호 발송", description = "회원가입에 사용할 휴대폰 번호로 6자리 인증번호를 발송합니다.")
+    @PostMapping("/phone-verifications/send")
+    public ResponseEntity<ApiResponse<Void>> sendPhoneVerification(
+            @Valid @RequestBody SendPhoneVerificationRequest request
+    ) {
+        phoneVerificationService.sendCode(request.phoneNumber());
+        return ResponseEntity.ok(ApiResponse.success("인증번호를 발송했습니다."));
+    }
+
+    // 발송된 인증번호를 검증하고 해당 휴대폰 번호를 회원가입 가능한 상태로 변경함
+    @Operation(summary = "휴대폰 인증번호 검증", description = "SMS로 받은 6자리 인증번호를 검증합니다.")
+    @PostMapping("/phone-verifications/verify")
+    public ResponseEntity<ApiResponse<Void>> verifyPhone(
+            @Valid @RequestBody VerifyPhoneRequest request
+    ) {
+        phoneVerificationService.verifyCode(request.phoneNumber(), request.code());
+        return ResponseEntity.ok(ApiResponse.success("휴대폰 인증이 완료되었습니다."));
+    }
 
     @Operation(summary = "회원가입", description = "이메일과 비밀번호로 SafeFam 계정을 생성합니다.")
     @PostMapping("/signup")

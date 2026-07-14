@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/reissue").permitAll()
+                        // 로그인 전 수행하는 휴대폰 인증 API이므로 Access Token 없이 호출 가능
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/phone-verifications/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
