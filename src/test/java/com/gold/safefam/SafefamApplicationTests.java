@@ -34,6 +34,8 @@ class SafefamApplicationTests {
                 .getContentAsString();
 
         assertTrue(openApiDocument.contains("/api/v1/auth/login"));
+        assertTrue(openApiDocument.contains("/api/v1/auth/phone-verifications/send"));
+        assertTrue(openApiDocument.contains("/api/v1/auth/phone-verifications/verify"));
         assertTrue(openApiDocument.contains("/api/v1/users/me"));
         assertTrue(openApiDocument.contains("/api/v1/analyses"));
         assertTrue(openApiDocument.contains("/api/v1/statistics/overview"));
