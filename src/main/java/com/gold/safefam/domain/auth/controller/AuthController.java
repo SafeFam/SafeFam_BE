@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 로그인 요청이 들어오면 AuthController에서 처리
- * AuthService에서 이메일/비밀번호 확인
+ * AuthService에서 전화번호/비밀번호 확인
  * JwtUtil에서 Access/Refresh Token 생성
  * Refresh Token 해시를 DB에 저장
  * 토큰 반환
@@ -61,7 +61,7 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("휴대폰 인증이 완료되었습니다."));
     }
 
-    @Operation(summary = "회원가입", description = "이메일과 비밀번호로 SafeFam 계정을 생성합니다.")
+    @Operation(summary = "회원가입", description = "인증된 전화번호와 비밀번호, 이름으로 SafeFam 계정을 생성합니다.")
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest request) {
         authService.signup(request);
@@ -69,7 +69,7 @@ public class AuthController {
                 .body(ApiResponse.success("회원가입이 완료되었습니다."));
     }
 
-    @Operation(summary = "로그인", description = "인증 성공 시 Access Token과 Refresh Token을 발급합니다.")
+    @Operation(summary = "로그인", description = "전화번호와 비밀번호 인증 성공 시 Access Token과 Refresh Token을 발급합니다.")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse response = authService.login(request);

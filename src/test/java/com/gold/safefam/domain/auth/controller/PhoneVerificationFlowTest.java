@@ -78,17 +78,17 @@ class PhoneVerificationFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("휴대폰 인증이 완료되었습니다."));
 
-        signup("010-1234-5678", "verified@example.com")
+        signup("010-1234-5678")
                 .andExpect(status().isCreated());
 
-        User user = userRepository.findByEmail("verified@example.com").orElseThrow();
+        User user = userRepository.findByPhoneNumber("01012345678").orElseThrow();
         assertEquals("01012345678", user.getPhoneNumber());
         assertFalse(phoneVerificationRepository.findByPhoneNumber("01012345678").isPresent());
     }
 
     @Test
     void unverifiedPhoneCannotSignUp() throws Exception {
-        signup("010-1111-2222", "unverified@example.com")
+        signup("010-1111-2222")
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.message").value("휴대폰 인증이 필요합니다."));
     }
@@ -151,10 +151,9 @@ class PhoneVerificationFlowTest {
     @Test
     void alreadyRegisteredPhoneCannotRequestAnotherCode() throws Exception {
         userRepository.save(new User(
-                "registered@example.com",
+                "01066667777",
                 passwordEncoder.encode("safePassword123!"),
-                "Safe User",
-                "01066667777"
+                "Safe User"
         ));
 
         sendCode("010-6666-7777")
@@ -192,14 +191,11 @@ class PhoneVerificationFlowTest {
                         + "\",\"code\":\"" + code + "\"}"));
     }
 
-    private org.springframework.test.web.servlet.ResultActions signup(
-            String phoneNumber,
-            String email
-    ) throws Exception {
+    private org.springframework.test.web.servlet.ResultActions signup(String phoneNumber)
+            throws Exception {
         return mockMvc.perform(post("/api/v1/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"phoneNumber\":\"" + phoneNumber
-                        + "\",\"email\":\"" + email
                         + "\",\"password\":\"safePassword123!\",\"name\":\"Safe User\"}"));
     }
 }
