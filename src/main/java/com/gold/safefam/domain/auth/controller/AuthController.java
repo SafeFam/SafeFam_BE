@@ -1,12 +1,6 @@
 package com.gold.safefam.domain.auth.controller;
 
-import com.gold.safefam.domain.auth.dto.LoginRequest;
-import com.gold.safefam.domain.auth.dto.LogoutRequest;
-import com.gold.safefam.domain.auth.dto.ReissueRequest;
-import com.gold.safefam.domain.auth.dto.SendPhoneVerificationRequest;
-import com.gold.safefam.domain.auth.dto.SignupRequest;
-import com.gold.safefam.domain.auth.dto.TokenResponse;
-import com.gold.safefam.domain.auth.dto.VerifyPhoneRequest;
+import com.gold.safefam.domain.auth.dto.*;
 import com.gold.safefam.domain.auth.service.AuthService;
 import com.gold.safefam.domain.auth.service.PhoneVerificationService;
 import com.gold.safefam.global.config.SwaggerConfig;
@@ -74,6 +68,15 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success("로그인에 성공했습니다.", response));
+    }
+
+    @Operation(summary = "비밀번호 재설정", description = "휴대폰 인증 완료 후 새 비밀번호로 변경합니다.")
+    @PostMapping("/password/reset")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody PasswordResetRequest request
+    ) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("비밀번호가 변경되었습니다."));
     }
 
     @Operation(summary = "Access Token 재발급", description = "유효한 Refresh Token으로 토큰을 재발급합니다.")
