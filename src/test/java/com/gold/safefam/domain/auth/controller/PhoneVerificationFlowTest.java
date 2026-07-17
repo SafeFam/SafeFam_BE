@@ -152,7 +152,7 @@ class PhoneVerificationFlowTest {
     void alreadyRegisteredPhoneCannotRequestAnotherCode() throws Exception {
         userRepository.save(new User(
                 "01066667777",
-                passwordEncoder.encode("safePassword123!"),
+                passwordEncoder.encode("safefam12"),
                 "Safe User"
         ));
 
@@ -196,6 +196,6 @@ class PhoneVerificationFlowTest {
         return mockMvc.perform(post("/api/v1/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"phoneNumber\":\"" + phoneNumber
-                        + "\",\"password\":\"safePassword123!\",\"name\":\"Safe User\"}"));
+                        + "\",\"password\":\"safefam12\",\"name\":\"Safe User\"}"));
     }
 }
