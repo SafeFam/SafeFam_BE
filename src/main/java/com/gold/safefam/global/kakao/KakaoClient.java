@@ -9,7 +9,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -35,8 +36,10 @@ public class KakaoClient {
                     Map.class
             );
             return response.getBody();
-        } catch (RestClientException e) {
+        } catch (HttpClientErrorException e) {
             throw new BusinessException(ErrorCode.KAKAO_AUTH_FAILED);
+        } catch (ResourceAccessException e) {
+            throw new BusinessException(ErrorCode.KAKAO_SERVER_ERROR);
         }
     }
 }

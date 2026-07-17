@@ -40,10 +40,13 @@ public class User extends BaseTimeEntity {
     @Column(name = "kakao_id", unique = true, length = 100)
     private String kakaoId;
 
-    public User(String kakaoId, boolean isKakaoUser) {
-        this.kakaoId = kakaoId;
-        this.name = "카카오사용자";
-        this.role = UserRole.USER;
+    public static User ofKakao(String kakaoId, String phoneNumber, String name) {
+        User user = new User();
+        user.kakaoId = kakaoId;
+        user.phoneNumber = phoneNumber;
+        user.name = name;
+        user.role = UserRole.USER;
+        return user;
     }
 
     public void linkKakao(String kakaoId) {

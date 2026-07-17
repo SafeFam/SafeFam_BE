@@ -144,7 +144,11 @@ public class AuthService {
     @Transactional
     public Map<String, Object> kakaoLogin(String kakaoAccessToken) {
         Map<String, Object> kakaoUserInfo = kakaoClient.getUserInfo(kakaoAccessToken);
-        String kakaoId = String.valueOf(kakaoUserInfo.get("id"));
+        Object idObj = kakaoUserInfo.get("id");
+        if (idObj == null) {
+            throw new BusinessException(ErrorCode.KAKAO_AUTH_FAILED);
+        }
+        String kakaoId = String.valueOf(idObj);
 
         return userRepository.findByKakaoId(kakaoId)
                 .map(user -> {
@@ -156,12 +160,23 @@ public class AuthService {
 
     @Transactional
     public TokenResponse kakaoSignup(KakaoSignupRequest request) {
+        Map<String, Object> kakaoUserInfo = kakaoClient.getUserInfo(request.kakaoAccessToken());
+        Object idObj = kakaoUserInfo.get("id");
+        if (idObj == null) {
+            throw new BusinessException(ErrorCode.KAKAO_AUTH_FAILED);
+        }
+        String kakaoId = String.valueOf(idObj);
+
         String phoneNumber = phoneVerificationService.consumeVerified(request.phoneNumber());
 
         User user = userRepository.findByPhoneNumber(phoneNumber)
-                .orElseGet(() -> userRepository.save(new User(request.kakaoId(), true)));
+                .orElseGet(() -> userRepository.save(User.ofKakao(kakaoId, phoneNumber, request.name())));
 
-        user.linkKakao(request.kakaoId());
+        if (user.getKakaoId() != null && !user.getKakaoId().equals(kakaoId)) {
+            throw new BusinessException(ErrorCode.KAKAO_ALREADY_LINKED);
+        }
+
+        user.linkKakao(kakaoId);
         if (user.getName() == null) {
             user.updateName(request.name());
         }

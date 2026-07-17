@@ -8,8 +8,8 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "카카오 회원가입 요청")
 public record KakaoSignupRequest(
         @NotBlank
-        @Schema(description = "카카오 로그인에서 받은 kakaoId")
-        String kakaoId,
+        @Schema(description = "카카오 로그인에서 받은 액세스 토큰")
+        String kakaoAccessToken,
 
         @NotBlank
         @Pattern(regexp = "^010-?\\d{4}-?\\d{4}$")

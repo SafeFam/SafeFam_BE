@@ -215,6 +215,9 @@ class AuthControllerTest {
 
     @Test
     void kakaoSignupCreatesUserAndReturnsToken() throws Exception {
+        when(kakaoClient.getUserInfo(anyString()))
+                .thenReturn(Map.of("id", 12345678L));
+
         PhoneVerification verification = new PhoneVerification(
                 "01012345678",
                 passwordEncoder.encode("123456"),
@@ -228,7 +231,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
-                              "kakaoId": "12345678",
+                              "kakaoAccessToken": "test-token",
                               "phoneNumber": "010-1234-5678",
                               "name": "김안전"
                             }
