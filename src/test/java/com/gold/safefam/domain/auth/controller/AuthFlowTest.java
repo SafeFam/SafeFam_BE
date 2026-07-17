@@ -55,7 +55,7 @@ class AuthFlowTest {
     void loginIssuesAndStoresTokens() throws Exception {
         User user = saveUser();
 
-        MvcResult result = login("010-1234-5678", "safePassword123!")
+        MvcResult result = login("010-1234-5678", "safefam12")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
@@ -73,7 +73,7 @@ class AuthFlowTest {
     void loginRejectsUnknownPhoneNumberAndWrongPassword() throws Exception {
         saveUser();
 
-        login("010-9999-9999", "safePassword123!")
+        login("010-9999-9999", "safefam12")
                 .andExpect(status().isUnauthorized());
         login("01012345678", "wrongPassword")
                 .andExpect(status().isUnauthorized());
@@ -91,7 +91,7 @@ class AuthFlowTest {
     @Test
     void reissueRotatesRefreshTokenAndLogoutInvalidatesIt() throws Exception {
         saveUser();
-        MvcResult loginResult = login("01012345678", "safePassword123!")
+        MvcResult loginResult = login("01012345678", "safefam12")
                 .andExpect(status().isOk())
                 .andReturn();
         String firstRefreshToken = read(loginResult, "$.data.refreshToken");
@@ -117,7 +117,7 @@ class AuthFlowTest {
     private User saveUser() {
         return userRepository.save(new User(
                 "01012345678",
-                passwordEncoder.encode("safePassword123!"),
+                passwordEncoder.encode("safefam12"),
                 "Safe User"
         ));
     }

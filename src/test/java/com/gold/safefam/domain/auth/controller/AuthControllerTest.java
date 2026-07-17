@@ -64,7 +64,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "phoneNumber": "010-1234-5678",
-                                  "password": "safePassword123!",
+                                  "password": "safefam12",
                                   "name": "김안전"
                                 }
                                 """))
@@ -74,8 +74,8 @@ class AuthControllerTest {
 
         User user = userRepository.findByPhoneNumber("01012345678").orElseThrow();
 
-        assertNotEquals("safePassword123!", user.getPassword());
-        assertTrue(passwordEncoder.matches("safePassword123!", user.getPassword()));
+        assertNotEquals("safefam12", user.getPassword());
+        assertTrue(passwordEncoder.matches("safefam12", user.getPassword()));
         assertTrue(user.getPhoneNumber().equals("01012345678"));
     }
 
@@ -83,7 +83,7 @@ class AuthControllerTest {
     void signupReturnsConflictWhenPhoneNumberAlreadyExists() throws Exception {
         userRepository.save(new User(
                 "01099999999",
-                passwordEncoder.encode("safePassword123!"),
+                passwordEncoder.encode("safefam12"),
                 "김안전"
         ));
         PhoneVerification verification = new PhoneVerification(
@@ -100,7 +100,7 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "phoneNumber": "010-9999-9999",
-                                  "password": "safePassword123!",
+                                  "password": "safefam12",
                                   "name": "김안전"
                                 }
                                 """))
