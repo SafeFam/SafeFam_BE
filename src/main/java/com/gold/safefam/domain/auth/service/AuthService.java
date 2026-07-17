@@ -22,7 +22,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -37,13 +36,6 @@ public class AuthService {
     // 회원가입
     @Transactional
     public void signup(SignupRequest request) {
-        String email = normalizeEmail(request.email());
-
-        // email 중복 체크
-        if (userRepository.existsByEmail(email)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
-        }
-
         // 인증 완료 기록을 소비해 동일한 인증 결과가 여러 계정에 재사용되지 않게 함
         String phoneNumber = phoneVerificationService.consumeVerified(request.phoneNumber());
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
@@ -52,13 +44,13 @@ public class AuthService {
 
         // 비밀번호 BCrypt 암호화
         String encodedPassword = passwordEncoder.encode(request.password());
-        User user = new User(email, encodedPassword, request.name(), phoneNumber);
+        User user = new User(phoneNumber, encodedPassword, request.name());
         userRepository.save(user);
     }
 
     /*
-    이메일을 소문자로 정규화
-    이메일로 사용자 조회
+    전화번호를 숫자 전용 형식으로 정규화
+    전화번호로 사용자 조회
     passwordEncoder().matches()로 BCrypt 비밀번호 검증
     Access Token과 Refresh Token 발급
     Refresh Token 해시를 DB에 저장
@@ -69,7 +61,7 @@ public class AuthService {
 
     @Transactional
     public TokenResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(normalizeEmail(request.email()))
+        User user = userRepository.findByPhoneNumber(normalizePhoneNumber(request.phoneNumber()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
@@ -172,7 +164,7 @@ public class AuthService {
         }
     }
 
-    private String normalizeEmail(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
+    private String normalizePhoneNumber(String phoneNumber) {
+        return phoneNumber.replace("-", "");
     }
 }

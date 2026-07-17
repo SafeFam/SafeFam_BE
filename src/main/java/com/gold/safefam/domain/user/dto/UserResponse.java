@@ -9,8 +9,8 @@ public record UserResponse(
         @Schema(example = "1")
         Long userId,
 
-        @Schema(example = "safe@example.com")
-        String email,
+        @Schema(example = "01012345678")
+        String phoneNumber,
 
         @Schema(example = "김안전")
         String name,

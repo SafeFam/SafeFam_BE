@@ -55,7 +55,7 @@ class AuthFlowTest {
     void loginIssuesAndStoresTokens() throws Exception {
         User user = saveUser();
 
-        MvcResult result = login("safe@example.com", "safePassword123!")
+        MvcResult result = login("010-1234-5678", "safePassword123!")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
@@ -70,12 +70,12 @@ class AuthFlowTest {
     }
 
     @Test
-    void loginRejectsUnknownEmailAndWrongPassword() throws Exception {
+    void loginRejectsUnknownPhoneNumberAndWrongPassword() throws Exception {
         saveUser();
 
-        login("unknown@example.com", "safePassword123!")
+        login("010-9999-9999", "safePassword123!")
                 .andExpect(status().isUnauthorized());
-        login("safe@example.com", "wrongPassword")
+        login("01012345678", "wrongPassword")
                 .andExpect(status().isUnauthorized());
     }
 
@@ -91,7 +91,7 @@ class AuthFlowTest {
     @Test
     void reissueRotatesRefreshTokenAndLogoutInvalidatesIt() throws Exception {
         saveUser();
-        MvcResult loginResult = login("safe@example.com", "safePassword123!")
+        MvcResult loginResult = login("01012345678", "safePassword123!")
                 .andExpect(status().isOk())
                 .andReturn();
         String firstRefreshToken = read(loginResult, "$.data.refreshToken");
@@ -116,17 +116,18 @@ class AuthFlowTest {
 
     private User saveUser() {
         return userRepository.save(new User(
-                "safe@example.com",
+                "01012345678",
                 passwordEncoder.encode("safePassword123!"),
                 "Safe User"
         ));
     }
 
-    private org.springframework.test.web.servlet.ResultActions login(String email, String password)
+    private org.springframework.test.web.servlet.ResultActions login(String phoneNumber, String password)
             throws Exception {
         return mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"));
+                .content("{\"phoneNumber\":\"" + phoneNumber
+                        + "\",\"password\":\"" + password + "\"}"));
     }
 
     private org.springframework.test.web.servlet.ResultActions reissue(String refreshToken)

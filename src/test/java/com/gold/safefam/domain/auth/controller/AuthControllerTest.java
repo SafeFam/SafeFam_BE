@@ -45,6 +45,7 @@ class AuthControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
         phoneVerificationRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -63,7 +64,6 @@ class AuthControllerTest {
                         .content("""
                                 {
                                   "phoneNumber": "010-1234-5678",
-                                  "email": "safe@example.com",
                                   "password": "safePassword123!",
                                   "name": "김안전"
                                 }
@@ -72,7 +72,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("회원가입이 완료되었습니다."));
 
-        User user = userRepository.findByEmail("safe@example.com").orElseThrow();
+        User user = userRepository.findByPhoneNumber("01012345678").orElseThrow();
 
         assertNotEquals("safePassword123!", user.getPassword());
         assertTrue(passwordEncoder.matches("safePassword123!", user.getPassword()));
@@ -80,25 +80,32 @@ class AuthControllerTest {
     }
 
     @Test
-    void signupReturnsConflictWhenEmailAlreadyExists() throws Exception {
+    void signupReturnsConflictWhenPhoneNumberAlreadyExists() throws Exception {
         userRepository.save(new User(
-                "duplicate@example.com",
+                "01099999999",
                 passwordEncoder.encode("safePassword123!"),
                 "김안전"
         ));
+        PhoneVerification verification = new PhoneVerification(
+                "01099999999",
+                passwordEncoder.encode("123456"),
+                Instant.now().plusSeconds(180),
+                Instant.now()
+        );
+        verification.markVerified(Instant.now());
+        phoneVerificationRepository.save(verification);
 
         mockMvc.perform(post("/api/v1/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "phoneNumber": "010-9999-9999",
-                                  "email": "duplicate@example.com",
                                   "password": "safePassword123!",
                                   "name": "김안전"
                                 }
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value("ERROR"))
-                .andExpect(jsonPath("$.message").value("이미 가입된 이메일입니다."));
+                .andExpect(jsonPath("$.message").value("이미 가입된 휴대폰 번호입니다."));
     }
 }
