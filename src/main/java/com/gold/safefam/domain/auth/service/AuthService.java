@@ -1,9 +1,7 @@
 package com.gold.safefam.domain.auth.service;
 
-import com.gold.safefam.domain.auth.dto.LoginRequest;
-import com.gold.safefam.domain.auth.dto.PasswordResetRequest;
-import com.gold.safefam.domain.auth.dto.SignupRequest;
-import com.gold.safefam.domain.auth.dto.TokenResponse;
+import com.gold.safefam.global.kakao.KakaoClient;
+import com.gold.safefam.domain.auth.dto.*;
 import com.gold.safefam.domain.auth.entity.RefreshToken;
 import com.gold.safefam.domain.auth.repository.RefreshTokenRepository;
 import com.gold.safefam.domain.user.entity.User;
@@ -23,6 +21,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +31,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final KakaoClient kakaoClient;
     private final PhoneVerificationService phoneVerificationService;
 
     // 회원가입
@@ -139,6 +139,34 @@ public class AuthService {
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         refreshTokenRepository.findByUserId(user.getId())
                 .ifPresent(refreshTokenRepository::delete);
+    }
+
+    @Transactional
+    public Map<String, Object> kakaoLogin(String kakaoAccessToken) {
+        Map<String, Object> kakaoUserInfo = kakaoClient.getUserInfo(kakaoAccessToken);
+        String kakaoId = String.valueOf(kakaoUserInfo.get("id"));
+
+        return userRepository.findByKakaoId(kakaoId)
+                .map(user -> {
+                    TokenResponse token = issueAndStoreTokens(user);
+                    return Map.<String, Object>of("isNewUser", false, "token", token);
+                })
+                .orElseGet(() -> Map.of("isNewUser", true, "kakaoId", kakaoId));
+    }
+
+    @Transactional
+    public TokenResponse kakaoSignup(KakaoSignupRequest request) {
+        String phoneNumber = phoneVerificationService.consumeVerified(request.phoneNumber());
+
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseGet(() -> userRepository.save(new User(request.kakaoId(), true)));
+
+        user.linkKakao(request.kakaoId());
+        if (user.getName() == null) {
+            user.updateName(request.name());
+        }
+
+        return issueAndStoreTokens(user);
     }
 
     private TokenResponse issueAndStoreTokens(User user) {

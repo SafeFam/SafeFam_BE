@@ -59,6 +59,12 @@ public enum ErrorCode {
             HttpStatus.CONFLICT,
             "AU014",
             "이미 가입된 휴대폰 번호입니다."
+    ),
+
+    KAKAO_AUTH_FAILED(
+            HttpStatus.UNAUTHORIZED,
+            "AU015",
+            "카카오 인증에 실패했습니다."
     );
 
     private final HttpStatus status;

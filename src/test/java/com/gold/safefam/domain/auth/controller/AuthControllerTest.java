@@ -4,6 +4,7 @@ import com.gold.safefam.domain.auth.entity.PhoneVerification;
 import com.gold.safefam.domain.auth.repository.PhoneVerificationRepository;
 import com.gold.safefam.domain.user.entity.User;
 import com.gold.safefam.domain.user.repository.UserRepository;
+import com.gold.safefam.global.kakao.KakaoClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +12,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Instant;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -186,5 +191,49 @@ class AuthControllerTest {
                             """))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("전화번호 또는 비밀번호가 올바르지 않습니다."));
+    }
+
+    @MockitoBean
+    private KakaoClient kakaoClient;
+
+    @Test
+    void kakaoLoginReturnsNewUserWhenNotRegistered() throws Exception {
+        when(kakaoClient.getUserInfo(anyString()))
+                .thenReturn(Map.of("id", 12345678L));
+
+        mockMvc.perform(post("/api/v1/auth/kakao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "kakaoAccessToken": "test-token"
+                            }
+                            """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isNewUser").value(true))
+                .andExpect(jsonPath("$.data.kakaoId").value("12345678"));
+    }
+
+    @Test
+    void kakaoSignupCreatesUserAndReturnsToken() throws Exception {
+        PhoneVerification verification = new PhoneVerification(
+                "01012345678",
+                passwordEncoder.encode("123456"),
+                Instant.now().plusSeconds(180),
+                Instant.now()
+        );
+        verification.markVerified(Instant.now());
+        phoneVerificationRepository.save(verification);
+
+        mockMvc.perform(post("/api/v1/auth/kakao/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "kakaoId": "12345678",
+                              "phoneNumber": "010-1234-5678",
+                              "name": "김안전"
+                            }
+                            """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
     }
 }

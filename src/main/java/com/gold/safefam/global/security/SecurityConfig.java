@@ -54,6 +54,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/kakao").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/kakao/signup").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(rateLimitFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
