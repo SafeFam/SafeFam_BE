@@ -1,6 +1,7 @@
 package com.gold.safefam.domain.auth.service;
 
 import com.gold.safefam.domain.auth.dto.LoginRequest;
+import com.gold.safefam.domain.auth.dto.PasswordResetRequest;
 import com.gold.safefam.domain.auth.dto.SignupRequest;
 import com.gold.safefam.domain.auth.dto.TokenResponse;
 import com.gold.safefam.domain.auth.entity.RefreshToken;
@@ -128,6 +129,16 @@ public class AuthService {
         } catch (JwtException | IllegalArgumentException exception) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
+    }
+
+    @Transactional
+    public void resetPassword(PasswordResetRequest request) {
+        String phoneNumber = phoneVerificationService.consumeVerified(request.phoneNumber());
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
+        refreshTokenRepository.findByUserId(user.getId())
+                .ifPresent(refreshTokenRepository::delete);
     }
 
     private TokenResponse issueAndStoreTokens(User user) {
