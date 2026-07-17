@@ -12,3 +12,7 @@ spring:
 
   flyway:
     enabled: false
+
+kakao:
+  client-id: test-client-id
+  user-info-url: https://kapi.kakao.com/v2/user/me

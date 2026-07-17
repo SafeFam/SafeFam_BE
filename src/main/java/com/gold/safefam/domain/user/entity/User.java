@@ -17,10 +17,10 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "phone_number", nullable = false, unique = true, length = 20)
+    @Column(name = "phone_number", unique = true, length = 20)
     private String phoneNumber;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String password;
 
     @Column(nullable = false, length = 30)
@@ -35,6 +35,22 @@ public class User extends BaseTimeEntity {
         this.password = password;
         this.name = name;
         this.role = UserRole.USER;
+    }
+
+    @Column(name = "kakao_id", unique = true, length = 100)
+    private String kakaoId;
+
+    public static User ofKakao(String kakaoId, String phoneNumber, String name) {
+        User user = new User();
+        user.kakaoId = kakaoId;
+        user.phoneNumber = phoneNumber;
+        user.name = name;
+        user.role = UserRole.USER;
+        return user;
+    }
+
+    public void linkKakao(String kakaoId) {
+        this.kakaoId = kakaoId;
     }
 
     public void updateName(String name) {

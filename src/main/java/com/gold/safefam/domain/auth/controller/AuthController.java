@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * 로그인 요청이 들어오면 AuthController에서 처리
  * AuthService에서 전화번호/비밀번호 확인
@@ -98,5 +100,23 @@ public class AuthController {
     ) {
         authService.logout(userId, request.refreshToken());
         return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다."));
+    }
+
+    @Operation(summary = "카카오 소셜 로그인", description = "카카오 액세스 토큰으로 로그인하거나 신규 사용자 여부를 반환합니다.")
+    @PostMapping("/kakao")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> kakaoLogin(
+            @Valid @RequestBody KakaoLoginRequest request
+    ) {
+        Map<String, Object> response = authService.kakaoLogin(request.kakaoAccessToken());
+        return ResponseEntity.ok(ApiResponse.success("카카오 로그인 처리가 완료되었습니다.", response));
+    }
+
+    @Operation(summary = "카카오 회원가입", description = "카카오 ID와 전화번호 인증으로 계정을 생성하거나 기존 계정에 연동합니다.")
+    @PostMapping("/kakao/signup")
+    public ResponseEntity<ApiResponse<TokenResponse>> kakaoSignup(
+            @Valid @RequestBody KakaoSignupRequest request
+    ) {
+        TokenResponse response = authService.kakaoSignup(request);
+        return ResponseEntity.ok(ApiResponse.success("카카오 회원가입이 완료되었습니다.", response));
     }
 }
