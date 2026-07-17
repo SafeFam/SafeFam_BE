@@ -14,7 +14,10 @@ public record SignupRequest(
 
         @NotBlank
         @Size(min = 8, max = 64)
-        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,64}$", message = "비밀번호는 영문과 숫자를 포함한 8자리 이상이어야 합니다.")
+        @Pattern(
+                regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,64}$",
+                message = "비밀번호는 영문과 숫자를 포함한 8자 이상 64자 이하여야 합니다."
+        )
         @Schema(example = "safefam12")
         String password,
 
