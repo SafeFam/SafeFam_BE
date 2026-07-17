@@ -137,6 +137,8 @@ public class AuthService {
         User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
+        refreshTokenRepository.findByUserId(user.getId())
+                .ifPresent(refreshTokenRepository::delete);
     }
 
     private TokenResponse issueAndStoreTokens(User user) {
