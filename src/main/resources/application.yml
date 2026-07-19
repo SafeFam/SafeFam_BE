@@ -41,3 +41,8 @@ phone-verification:
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   user-info-url: https://kapi.kakao.com/v2/user/me
+
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  sender: ${SOLAPI_SENDER}
