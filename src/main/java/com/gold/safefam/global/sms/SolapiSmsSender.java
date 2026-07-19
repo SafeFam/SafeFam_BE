@@ -32,7 +32,7 @@ public class SolapiSmsSender implements SmsSender {
         try {
             messageService.sendOne(new SingleMessageSendingRequest(message));
         } catch (Exception e) {
-            throw new SmsDeliveryException("SMS 발송 실패: " + e.getMessage());
+            throw new SmsDeliveryException("SMS 발송 실패: ", e);
         }
     }
 }
