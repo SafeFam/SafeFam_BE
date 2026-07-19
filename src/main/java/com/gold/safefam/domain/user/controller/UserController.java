@@ -66,7 +66,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
-    @Operation(summary = "회원 탈퇴", description = "사용자와 탐지 이력을 개인정보 처리 정책에 따라 삭제합니다.")
+    @Operation(summary = "회원 탈퇴", description = "deleted_at을 기록하는 soft delete 방식으로 처리합니다.")
     @DeleteMapping
     public ResponseEntity<Void> withdraw(
             @AuthenticationPrincipal Long userId,

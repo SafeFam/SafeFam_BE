@@ -38,7 +38,7 @@ public class UserService {
     public void withdraw(Long userId, WithdrawalRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if (user.getPassword() != null) {
+        if (user.getKakaoId() == null) {
             if (!passwordEncoder.matches(request.password(), user.getPassword())) {
                 throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
             }
