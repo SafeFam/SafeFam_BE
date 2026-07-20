@@ -174,4 +174,22 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.autoAnalysisEnabled").value(false))
                 .andExpect(jsonPath("$.data.pushEnabled").value(true));
     }
+
+    @Test
+    void getSettingsReturns401WhenNoToken() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me/settings"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateSettingsReturns401WhenNoToken() throws Exception {
+        mockMvc.perform(patch("/api/v1/users/me/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "autoAnalysisEnabled": false
+                            }
+                            """))
+                .andExpect(status().isUnauthorized());
+    }
 }
