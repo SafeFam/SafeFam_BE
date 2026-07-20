@@ -43,5 +43,6 @@ public class DeviceService {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
         deviceRepository.delete(device);
+        deviceRepository.flush();
     }
 }
