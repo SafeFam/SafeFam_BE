@@ -134,4 +134,44 @@ class UserControllerTest {
         User deleted = userRepository.findById(kakaoUser.getId()).orElseThrow();
         assertNotNull(deleted.getDeletedAt());
     }
+
+    @Test
+    void getSettingsReturnsDefaultValues() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me/settings")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.autoAnalysisEnabled").value(true))
+                .andExpect(jsonPath("$.data.pushEnabled").value(true));
+    }
+
+    @Test
+    void updateSettingsChangesValues() throws Exception {
+        mockMvc.perform(patch("/api/v1/users/me/settings")
+                        .header("Authorization", accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "autoAnalysisEnabled": false,
+                              "pushEnabled": false
+                            }
+                            """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.autoAnalysisEnabled").value(false))
+                .andExpect(jsonPath("$.data.pushEnabled").value(false));
+    }
+
+    @Test
+    void updateSettingsChangesOnlyProvidedFields() throws Exception {
+        mockMvc.perform(patch("/api/v1/users/me/settings")
+                        .header("Authorization", accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "autoAnalysisEnabled": false
+                            }
+                            """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.autoAnalysisEnabled").value(false))
+                .andExpect(jsonPath("$.data.pushEnabled").value(true));
+    }
 }
