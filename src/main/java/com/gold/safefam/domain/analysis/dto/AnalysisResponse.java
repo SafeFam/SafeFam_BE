@@ -35,9 +35,9 @@ public record AnalysisResponse(
 
         OffsetDateTime analyzedAt
 ) {
-    @Schema(description = "3중 탐지 계층별 점수")
+    @Schema(description = "탐지 계층별 점수. 현재 규칙 기반 구현에서는 llmScore가 0입니다.")
     public record ScoreBreakdown(
-            @Schema(example = "90") int llmScore,
+            @Schema(example = "0") int llmScore,
             @Schema(example = "100") int urlScore,
             @Schema(example = "85") int patternScore
     ) {
@@ -54,7 +54,8 @@ public record AnalysisResponse(
     public record UrlThreat(
             @Schema(example = "https://short.example/abc") String originalUrl,
             @Schema(example = "https://malicious.example/login") String resolvedUrl,
-            @Schema(example = "true") boolean malicious
+            @Schema(description = "URL 형태에서 위험 특성이 발견됐는지 여부", example = "true")
+            boolean suspicious
     ) {
     }
 

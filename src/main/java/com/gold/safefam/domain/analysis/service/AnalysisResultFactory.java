@@ -36,7 +36,7 @@ public class AnalysisResultFactory {
                 indicators,
                 url.urls(),
                 buildExplanation(risk.level(), indicators),
-                recommendedActions(risk.level(), category)
+                recommendedActionsFor(risk.level(), category)
         );
     }
 
@@ -55,7 +55,7 @@ public class AnalysisResultFactory {
     }
 
     /** 위험 단계에는 공통 안전 행동을, 피싱 유형에는 관련 신고·상담 번호를 연결한다. */
-    private List<RecommendedAction> recommendedActions(
+    public List<RecommendedAction> recommendedActionsFor(
             RiskLevel riskLevel,
             PhishingCategory category
     ) {
