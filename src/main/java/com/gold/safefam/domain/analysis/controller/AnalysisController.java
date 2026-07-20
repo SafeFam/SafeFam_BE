@@ -6,6 +6,7 @@ import com.gold.safefam.domain.analysis.dto.AnalysisRequest;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
+import com.gold.safefam.domain.analysis.service.AnalysisService;
 import com.gold.safefam.global.config.SwaggerConfig;
 import com.gold.safefam.global.response.ApiResponse;
 import com.gold.safefam.global.response.PageResponse;
@@ -16,9 +17,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,19 +37,24 @@ import java.time.LocalDate;
 @Tag(name = "3. 문자 분석", description = "금융 사기 문자 분석 및 탐지 이력 관리")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
 @Validated
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/analyses")
 public class AnalysisController {
 
+    private final AnalysisService analysisService;
+
     @Operation(
             summary = "문자 분석",
-            description = "LLM 문맥 분석, URL 위협 검사, 규칙 기반 패턴 점수를 종합해 위험도를 반환합니다."
+            description = "문자 패턴과 URL 형태를 규칙 기반으로 분석해 위험도와 탐지 근거를 반환합니다."
     )
     @PostMapping
     public ResponseEntity<ApiResponse<AnalysisResponse>> analyze(
+            @AuthenticationPrincipal Long userId,
             @Valid @RequestBody AnalysisRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        AnalysisResponse response = analysisService.analyze(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("문자 분석이 완료되었습니다.", response));
     }
 
     @Operation(
