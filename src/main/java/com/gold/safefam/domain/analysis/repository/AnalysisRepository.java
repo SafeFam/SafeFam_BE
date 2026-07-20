@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -42,5 +43,63 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
             @Param("toExclusive") OffsetDateTime toExclusive,
             Pageable pageable
     );
+
+    /** 사용자의 전체 분석 결과를 위험 등급별로 집계한다. */
+    @Query("""
+            SELECT analysis.riskLevel AS riskLevel, COUNT(analysis) AS count
+            FROM Analysis analysis
+            WHERE analysis.userId = :userId
+            GROUP BY analysis.riskLevel
+            """)
+    List<RiskCount> countByRiskLevel(@Param("userId") Long userId);
+
+    /** 사용자의 지정 시점 이후 분석 결과를 위험 등급별로 집계한다. */
+    @Query("""
+            SELECT analysis.riskLevel AS riskLevel, COUNT(analysis) AS count
+            FROM Analysis analysis
+            WHERE analysis.userId = :userId
+              AND analysis.analyzedAt >= :fromAt
+            GROUP BY analysis.riskLevel
+            """)
+    List<RiskCount> countByRiskLevelSince(
+            @Param("userId") Long userId,
+            @Param("fromAt") OffsetDateTime fromAt
+    );
+
+    /** 사용자의 전체 분석 결과를 피싱 유형별로 집계한다. */
+    @Query("""
+            SELECT analysis.category AS category, COUNT(analysis) AS count
+            FROM Analysis analysis
+            WHERE analysis.userId = :userId
+            GROUP BY analysis.category
+            """)
+    List<CategoryCount> countByCategory(@Param("userId") Long userId);
+
+    /** 사용자의 지정 시점 이후 분석 결과를 피싱 유형별로 집계한다. */
+    @Query("""
+            SELECT analysis.category AS category, COUNT(analysis) AS count
+            FROM Analysis analysis
+            WHERE analysis.userId = :userId
+              AND analysis.analyzedAt >= :fromAt
+            GROUP BY analysis.category
+            """)
+    List<CategoryCount> countByCategorySince(
+            @Param("userId") Long userId,
+            @Param("fromAt") OffsetDateTime fromAt
+    );
+
+    /** 위험 등급별 집계 결과를 받는 조회 전용 프로젝션이다. */
+    interface RiskCount {
+        RiskLevel getRiskLevel();
+
+        long getCount();
+    }
+
+    /** 피싱 유형별 집계 결과를 받는 조회 전용 프로젝션이다. */
+    interface CategoryCount {
+        PhishingCategory getCategory();
+
+        long getCount();
+    }
 
 }
