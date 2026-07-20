@@ -89,6 +89,12 @@ public enum ErrorCode {
             HttpStatus.FORBIDDEN,
             "US002",
             "계정이 잠겼습니다. 휴대폰 인증으로 잠금을 해제해 주세요."
+    ),
+
+    DEVICE_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "NO001",
+            "등록된 기기를 찾을 수 없습니다."
     );
 
     private final HttpStatus status;

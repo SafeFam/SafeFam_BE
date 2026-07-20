@@ -21,3 +21,6 @@ solapi:
   api-key: test
   api-secret: test
   sender: "01000000000"
+
+firebase:
+  service-account-path: test
