@@ -1,5 +1,6 @@
 package com.gold.safefam.domain.auth.service;
 
+import com.gold.safefam.domain.user.service.UserService;
 import com.gold.safefam.global.kakao.KakaoClient;
 import com.gold.safefam.domain.auth.dto.*;
 import com.gold.safefam.domain.auth.entity.RefreshToken;
@@ -33,6 +34,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final KakaoClient kakaoClient;
     private final PhoneVerificationService phoneVerificationService;
+    private final UserService userService;
 
     // 회원가입
     @Transactional
@@ -65,10 +67,16 @@ public class AuthService {
         User user = userRepository.findByPhoneNumber(normalizePhoneNumber(request.phoneNumber()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
+        if (user.isLocked()) {
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            userService.incrementLoginFailCount(user.getId());
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
+        user.resetLoginFail();
         return issueAndStoreTokens(user);
     }
 
@@ -137,6 +145,7 @@ public class AuthService {
         User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
+        user.resetLoginFail();
         refreshTokenRepository.findByUserId(user.getId())
                 .ifPresent(refreshTokenRepository::delete);
     }
@@ -182,6 +191,14 @@ public class AuthService {
         }
 
         return issueAndStoreTokens(user);
+    }
+
+    @Transactional
+    public void unlock(UnlockRequest request) {
+        String phoneNumber = phoneVerificationService.consumeVerified(request.phoneNumber());
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
+        user.resetLoginFail();
     }
 
     private TokenResponse issueAndStoreTokens(User user) {

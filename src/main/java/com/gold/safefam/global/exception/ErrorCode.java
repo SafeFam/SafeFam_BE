@@ -83,6 +83,12 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND,
             "US001",
             "사용자를 찾을 수 없습니다."
+    ),
+
+    ACCOUNT_LOCKED(
+            HttpStatus.FORBIDDEN,
+            "US002",
+            "계정이 잠겼습니다. 휴대폰 인증으로 잠금을 해제해 주세요."
     );
 
     private final HttpStatus status;

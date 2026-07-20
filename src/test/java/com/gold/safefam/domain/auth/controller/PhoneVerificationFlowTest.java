@@ -148,19 +148,6 @@ class PhoneVerificationFlowTest {
         assertTrue(phoneVerificationRepository.findByPhoneNumber("01055556666").isEmpty());
     }
 
-    @Test
-    void alreadyRegisteredPhoneCannotRequestAnotherCode() throws Exception {
-        userRepository.save(new User(
-                "01066667777",
-                passwordEncoder.encode("safefam12"),
-                "Safe User"
-        ));
-
-        sendCode("010-6666-7777")
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("이미 가입된 휴대폰 번호입니다."));
-    }
-
     private String sendAndCaptureCode(String phoneNumber) throws Exception {
         sendCode(phoneNumber)
                 .andExpect(status().isOk())
