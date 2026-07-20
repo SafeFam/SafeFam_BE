@@ -62,8 +62,6 @@ public class UserService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void incrementLoginFailCount(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        user.incrementLoginFailCount();
+        userRepository.incrementLoginFailCount(userId);
     }
 }

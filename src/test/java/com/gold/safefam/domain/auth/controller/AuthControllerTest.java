@@ -314,4 +314,83 @@ class AuthControllerTest {
         assertFalse(unlocked.isLocked());
         assertEquals(0, unlocked.getLoginFailCount());
     }
+
+    @Test
+    void successfulLoginResetsFailCount() throws Exception {
+        userRepository.save(new User(
+                "01012345678",
+                passwordEncoder.encode("safefam12"),
+                "김안전"
+        ));
+
+        for (int i = 0; i < 3; i++) {
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                {
+                                  "phoneNumber": "010-1234-5678",
+                                  "password": "wrongpassword"
+                                }
+                                """))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "phoneNumber": "010-1234-5678",
+                              "password": "safefam12"
+                            }
+                            """))
+                .andExpect(status().isOk());
+
+        User updated = userRepository.findByPhoneNumber("01012345678").orElseThrow();
+        assertEquals(0, updated.getLoginFailCount());
+        assertFalse(updated.isLocked());
+    }
+
+    @Test
+    void passwordResetUnlocksAccount() throws Exception {
+        userRepository.save(new User(
+                "01012345678",
+                passwordEncoder.encode("safefam12"),
+                "김안전"
+        ));
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                {
+                                  "phoneNumber": "010-1234-5678",
+                                  "password": "wrongpassword"
+                                }
+                                """))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        PhoneVerification verification = new PhoneVerification(
+                "01012345678",
+                passwordEncoder.encode("123456"),
+                Instant.now().plusSeconds(180),
+                Instant.now()
+        );
+        verification.markVerified(Instant.now());
+        phoneVerificationRepository.save(verification);
+
+        mockMvc.perform(post("/api/v1/auth/password/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "phoneNumber": "010-1234-5678",
+                              "newPassword": "newpass12"
+                            }
+                            """))
+                .andExpect(status().isOk());
+
+        User updated = userRepository.findByPhoneNumber("01012345678").orElseThrow();
+        assertFalse(updated.isLocked());
+        assertEquals(0, updated.getLoginFailCount());
+    }
 }
