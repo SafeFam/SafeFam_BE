@@ -24,8 +24,7 @@ public class FirebaseConfig {
             log.info("Firebase 초기화 스킵 (테스트 환경)");
             return;
         }
-        try {
-            FileInputStream serviceAccount = new FileInputStream(serviceAccountPath);
+        try (FileInputStream serviceAccount = new FileInputStream(serviceAccountPath)) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
