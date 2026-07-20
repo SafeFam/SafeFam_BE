@@ -1,0 +1,1 @@
+ALTER TABLE devices ADD CONSTRAINT uk_devices_fcm_token UNIQUE (fcm_token);

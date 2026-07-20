@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class DeviceService {
@@ -18,12 +20,14 @@ public class DeviceService {
 
     @Transactional
     public DeviceResponse register(Long userId, RegisterDeviceRequest request) {
-        if (deviceRepository.existsByUserIdAndFcmToken(userId, request.deviceToken())) {
-            Device existing = deviceRepository.findByUserId(userId).stream()
-                    .filter(d -> d.getFcmToken().equals(request.deviceToken()))
-                    .findFirst()
-                    .orElseThrow();
-            return new DeviceResponse(existing.getId(), existing.getPlatform());
+        Optional<Device> existing = deviceRepository.findByFcmToken(request.deviceToken());
+
+        if (existing.isPresent()) {
+            Device device = existing.get();
+            if (device.getUserId().equals(userId)) {
+                return new DeviceResponse(device.getId(), device.getPlatform());
+            }
+            deviceRepository.delete(device);
         }
 
         Device device = new Device(userId, request.deviceToken(), request.platform());
