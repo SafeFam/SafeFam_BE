@@ -46,3 +46,6 @@ solapi:
   api-key: ${SOLAPI_API_KEY}
   api-secret: ${SOLAPI_API_SECRET}
   sender: ${SOLAPI_SENDER}
+
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
