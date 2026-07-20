@@ -1,5 +1,6 @@
 package com.gold.safefam.domain.analysis.mapper;
 
+import com.gold.safefam.domain.analysis.dto.AnalysisListItemResponse;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.Indicator;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.RecommendedAction;
@@ -61,6 +62,19 @@ public class AnalysisResponseMapper {
         );
     }
 
+    /** 목록 화면에 필요한 요약 정보만 반환하며 숫자형 발신자는 일부를 가린다. */
+    public AnalysisListItemResponse toListItemResponse(Analysis analysis) {
+        return new AnalysisListItemResponse(
+                analysis.getId(),
+                maskSender(analysis.getSender()),
+                analysis.getContentPreview(),
+                analysis.getTotalScore(),
+                analysis.getRiskLevel(),
+                analysis.getCategory(),
+                analysis.getAnalyzedAt()
+        );
+    }
+
     private RecommendedAction toRecommendedAction(
             MessageRiskAnalysisResult.RecommendedAction action
     ) {
@@ -70,5 +84,20 @@ public class AnalysisResponseMapper {
                 action.phoneNumber(),
                 action.url()
         );
+    }
+
+    private String maskSender(String sender) {
+        if (sender == null || sender.isBlank()) {
+            return sender;
+        }
+
+        String digits = sender.replaceAll("\\D", "");
+        if (digits.length() == 10 || digits.length() == 11) {
+            return digits.substring(0, 3) + "-****-" + digits.substring(digits.length() - 4);
+        }
+        if (digits.length() >= 8) {
+            return digits.substring(0, 4) + "****";
+        }
+        return sender;
     }
 }

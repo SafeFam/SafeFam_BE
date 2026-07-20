@@ -61,6 +61,13 @@ public enum ErrorCode {
             "이미 가입된 휴대폰 번호입니다."
     ),
 
+    /** 존재하지 않거나 인증 사용자가 소유하지 않은 분석 이력을 동일하게 숨긴다. */
+    ANALYSIS_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "AN001",
+            "탐지 이력을 찾을 수 없습니다."
+    ),
+
     KAKAO_AUTH_FAILED(
             HttpStatus.UNAUTHORIZED,
             "AU015",
