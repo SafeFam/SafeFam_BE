@@ -81,6 +81,15 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("비밀번호가 변경되었습니다."));
     }
 
+    @Operation(summary = "계정 잠금 해제", description = "휴대폰 인증으로 잠긴 계정을 해제합니다.")
+    @PostMapping("/unlock")
+    public ResponseEntity<ApiResponse<Void>> unlock(
+            @Valid @RequestBody UnlockRequest request
+    ) {
+        authService.unlock(request);
+        return ResponseEntity.ok(ApiResponse.success("계정 잠금이 해제되었습니다."));
+    }
+
     @Operation(summary = "Access Token 재발급", description = "유효한 Refresh Token으로 토큰을 재발급합니다.")
     @PostMapping("/reissue")
     public ResponseEntity<ApiResponse<TokenResponse>> reissue(@Valid @RequestBody ReissueRequest request) {

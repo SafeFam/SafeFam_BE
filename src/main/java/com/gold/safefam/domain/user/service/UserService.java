@@ -8,6 +8,7 @@ import com.gold.safefam.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -57,5 +58,10 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         user.updateSettings(request.autoAnalysisEnabled(), request.pushEnabled());
         return new UserSettingsResponse(user.isAutoAnalysisEnabled(), user.isPushEnabled());
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void incrementLoginFailCount(Long userId) {
+        userRepository.incrementLoginFailCount(userId);
     }
 }

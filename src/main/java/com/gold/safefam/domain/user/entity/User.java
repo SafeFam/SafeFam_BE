@@ -33,6 +33,12 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
+    @Column(name = "login_fail_count", nullable = false)
+    private int loginFailCount = 0;
+
+    @Column(name = "is_locked", nullable = false)
+    private boolean isLocked = false;
+
     @Column(name = "auto_analysis_enabled", nullable = false)
     private boolean autoAnalysisEnabled = true;
 
@@ -70,5 +76,17 @@ public class User extends BaseTimeEntity {
     public void updateSettings(Boolean autoAnalysisEnabled, Boolean pushEnabled) {
         if (autoAnalysisEnabled != null) this.autoAnalysisEnabled = autoAnalysisEnabled;
         if (pushEnabled != null) this.pushEnabled = pushEnabled;
+    }
+
+    public void incrementLoginFailCount() {
+        this.loginFailCount++;
+        if (this.loginFailCount >= 5) {
+            this.isLocked = true;
+        }
+    }
+
+    public void resetLoginFail() {
+        this.loginFailCount = 0;
+        this.isLocked = false;
     }
 }

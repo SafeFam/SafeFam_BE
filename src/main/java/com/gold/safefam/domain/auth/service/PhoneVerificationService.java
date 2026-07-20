@@ -2,7 +2,6 @@ package com.gold.safefam.domain.auth.service;
 
 import com.gold.safefam.domain.auth.entity.PhoneVerification;
 import com.gold.safefam.domain.auth.repository.PhoneVerificationRepository;
-import com.gold.safefam.domain.user.repository.UserRepository;
 import com.gold.safefam.global.exception.BusinessException;
 import com.gold.safefam.global.exception.ErrorCode;
 import com.gold.safefam.global.sms.SmsDeliveryException;
@@ -27,7 +26,6 @@ public class PhoneVerificationService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final PhoneVerificationRepository phoneVerificationRepository;
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SmsSender smsSender;
 
@@ -47,10 +45,6 @@ public class PhoneVerificationService {
     @Transactional
     public void sendCode(String requestedPhoneNumber) {
         String phoneNumber = normalize(requestedPhoneNumber);
-        if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
-        }
-
         Instant now = Instant.now();
         PhoneVerification verification = phoneVerificationRepository
                 .findByPhoneNumber(phoneNumber)
