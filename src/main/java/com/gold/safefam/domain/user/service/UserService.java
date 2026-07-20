@@ -1,8 +1,6 @@
 package com.gold.safefam.domain.user.service;
 
-import com.gold.safefam.domain.user.dto.UpdateUserRequest;
-import com.gold.safefam.domain.user.dto.UserResponse;
-import com.gold.safefam.domain.user.dto.WithdrawalRequest;
+import com.gold.safefam.domain.user.dto.*;
 import com.gold.safefam.domain.user.entity.User;
 import com.gold.safefam.domain.user.repository.UserRepository;
 import com.gold.safefam.global.exception.BusinessException;
@@ -44,5 +42,20 @@ public class UserService {
             }
         }
         user.delete();
+    }
+
+    @Transactional(readOnly = true)
+    public UserSettingsResponse getSettings(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return new UserSettingsResponse(user.isAutoAnalysisEnabled(), user.isPushEnabled());
+    }
+
+    @Transactional
+    public UserSettingsResponse updateSettings(Long userId, UpdateUserSettingsRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        user.updateSettings(request.autoAnalysisEnabled(), request.pushEnabled());
+        return new UserSettingsResponse(user.isAutoAnalysisEnabled(), user.isPushEnabled());
     }
 }

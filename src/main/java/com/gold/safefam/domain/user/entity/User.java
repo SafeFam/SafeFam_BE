@@ -23,6 +23,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "password_hash")
     private String password;
 
+    @Column(name = "kakao_id", unique = true, length = 100)
+    private String kakaoId;
+
     @Column(nullable = false, length = 30)
     private String name;
 
@@ -30,15 +33,18 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
+    @Column(name = "auto_analysis_enabled", nullable = false)
+    private boolean autoAnalysisEnabled = true;
+
+    @Column(name = "push_enabled", nullable = false)
+    private boolean pushEnabled = true;
+
     public User(String phoneNumber, String password, String name) {
         this.phoneNumber = phoneNumber;
         this.password = password;
         this.name = name;
         this.role = UserRole.USER;
     }
-
-    @Column(name = "kakao_id", unique = true, length = 100)
-    private String kakaoId;
 
     public static User ofKakao(String kakaoId, String phoneNumber, String name) {
         User user = new User();
@@ -59,5 +65,10 @@ public class User extends BaseTimeEntity {
 
     public void updatePassword(String password) {
         this.password = password;
+    }
+
+    public void updateSettings(Boolean autoAnalysisEnabled, Boolean pushEnabled) {
+        if (autoAnalysisEnabled != null) this.autoAnalysisEnabled = autoAnalysisEnabled;
+        if (pushEnabled != null) this.pushEnabled = pushEnabled;
     }
 }

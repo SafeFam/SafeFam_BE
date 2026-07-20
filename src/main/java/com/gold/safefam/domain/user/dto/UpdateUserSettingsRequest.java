@@ -8,9 +8,6 @@ public record UpdateUserSettingsRequest(
         Boolean autoAnalysisEnabled,
 
         @Schema(example = "true")
-        Boolean pushEnabled,
-
-        @Schema(description = "분석 후 원문 저장 여부", example = "false")
-        Boolean saveMessageContent
+        Boolean pushEnabled
 ) {
 }

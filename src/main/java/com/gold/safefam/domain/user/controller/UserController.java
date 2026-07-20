@@ -51,19 +51,22 @@ public class UserController {
 
     @Operation(summary = "탐지·알림 설정 조회")
     @GetMapping("/settings")
-    public ResponseEntity<ApiResponse<UserSettingsResponse>> getSettings() {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<ApiResponse<UserSettingsResponse>> getSettings(
+            @AuthenticationPrincipal Long userId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success("설정을 조회했습니다.", userService.getSettings(userId)));
     }
 
     @Operation(
             summary = "탐지·알림 설정 변경",
-            description = "전달한 필드만 변경합니다. 문자 원문 저장은 기본적으로 비활성화합니다."
+            description = "전달한 필드만 변경합니다."
     )
     @PatchMapping("/settings")
     public ResponseEntity<ApiResponse<UserSettingsResponse>> updateSettings(
+            @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UpdateUserSettingsRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok(ApiResponse.success("설정을 변경했습니다.", userService.updateSettings(userId, request)));
     }
 
     @Operation(summary = "회원 탈퇴", description = "deleted_at을 기록하는 soft delete 방식으로 처리합니다.")
