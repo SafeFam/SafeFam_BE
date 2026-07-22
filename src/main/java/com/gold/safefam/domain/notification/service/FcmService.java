@@ -13,13 +13,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FcmService {
 
-    public void sendNotification(String fcmToken, String title, String body) {
+    public void sendNotification(String fcmToken, String title, String body, Long analysisId) {
         Message message = Message.builder()
                 .setToken(fcmToken)
                 .setNotification(Notification.builder()
                         .setTitle(title)
                         .setBody(body)
                         .build())
+                .putData("analysisId", String.valueOf(analysisId))
                 .build();
 
         try {

@@ -16,6 +16,9 @@ import com.gold.safefam.domain.analysis.privacy.MessageContentProtector;
 import com.gold.safefam.domain.analysis.privacy.MessageContentProtector.ProtectedContent;
 import com.gold.safefam.domain.analysis.repository.AnalysisFeedbackRepository;
 import com.gold.safefam.domain.analysis.repository.AnalysisRepository;
+import com.gold.safefam.domain.notification.entity.Device;
+import com.gold.safefam.domain.notification.repository.DeviceRepository;
+import com.gold.safefam.domain.notification.service.FcmService;
 import com.gold.safefam.global.exception.BusinessException;
 import com.gold.safefam.global.exception.ErrorCode;
 import com.gold.safefam.global.response.PageResponse;
@@ -29,6 +32,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
 
 /**
  * 문자 분석 생성과 인증 사용자 이력 관리 유스케이스를 조율하는 애플리케이션 서비스.
@@ -44,19 +48,25 @@ public class AnalysisService {
     private final AnalysisRepository analysisRepository;
     private final AnalysisFeedbackRepository analysisFeedbackRepository;
     private final AnalysisResponseMapper responseMapper;
+    private final DeviceRepository deviceRepository;
+    private final FcmService fcmService;
 
     public AnalysisService(
             MessageRiskAnalyzer riskAnalyzer,
             MessageContentProtector contentProtector,
             AnalysisRepository analysisRepository,
             AnalysisFeedbackRepository analysisFeedbackRepository,
-            AnalysisResponseMapper responseMapper
+            AnalysisResponseMapper responseMapper,
+            DeviceRepository deviceRepository,
+            FcmService fcmService
     ) {
         this.riskAnalyzer = riskAnalyzer;
         this.contentProtector = contentProtector;
         this.analysisRepository = analysisRepository;
         this.analysisFeedbackRepository = analysisFeedbackRepository;
         this.responseMapper = responseMapper;
+        this.deviceRepository = deviceRepository;
+        this.fcmService = fcmService;
     }
 
     /** 인증 사용자 기준으로 중복 확인, 분석, 원문 보호, 저장, 응답 변환을 수행한다. */
@@ -84,7 +94,9 @@ public class AnalysisService {
                 new AnalysisUrlRisk(url.originalUrl(), url.shortened(), url.suspicious())
         ));
 
-        return responseMapper.toResponse(analysisRepository.save(analysis));
+        Analysis saved = analysisRepository.save(analysis);
+        sendPushNotification(userId, saved.getRiskLevel(), saved.getId());
+        return responseMapper.toResponse(saved);
     }
 
     /** 인증 사용자의 분석 이력을 조건에 맞게 최신순으로 조회한다. */
@@ -204,5 +216,23 @@ public class AnalysisService {
 
     private OffsetDateTime toStartOfNextDay(LocalDate date) {
         return date == null ? null : date.plusDays(1).atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
+    }
+
+    private void sendPushNotification(Long userId, RiskLevel riskLevel, Long analysisId) {
+        List<Device> devices = deviceRepository.findByUserId(userId);
+        if (devices.isEmpty()) return;
+
+        String title = switch (riskLevel) {
+            case HIGH -> "⚠️ 위험 문자 탐지";
+            case MEDIUM -> "⚠️ 의심 문자 탐지";
+            case LOW -> "✅ 문자 분석 완료";
+        };
+        String body = switch (riskLevel) {
+            case HIGH -> "피싱 위험 문자가 탐지되었습니다. 즉시 확인하세요.";
+            case MEDIUM -> "의심스러운 문자가 탐지되었습니다. 확인해 보세요.";
+            case LOW -> "분석 결과 안전한 문자로 확인되었습니다.";
+        };
+
+        devices.forEach(device -> fcmService.sendNotification(device.getFcmToken(), title, body, analysisId));
     }
 }
