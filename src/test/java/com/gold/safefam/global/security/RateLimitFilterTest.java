@@ -9,8 +9,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -107,7 +107,7 @@ class RateLimitFilterTest {
     @Test
     @DisplayName("POST /analyses 제한 횟수 이하 요청은 통과한다")
     void allowsAnalysisRequestsUnderLimit() throws Exception {
-        setUpSecurityContext("user1");
+        setUpSecurityContext(1L);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod("POST");
@@ -123,7 +123,7 @@ class RateLimitFilterTest {
     @Test
     @DisplayName("POST /analyses 제한 횟수 초과 요청은 429를 반환한다")
     void blocksAnalysisRequestsOverLimit() throws Exception {
-        setUpSecurityContext("user2");
+        setUpSecurityContext(2L);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod("POST");
@@ -139,10 +139,29 @@ class RateLimitFilterTest {
         assertThat(response.getContentAsString()).contains("분석 요청 한도를 초과했습니다");
     }
 
-    private void setUpSecurityContext(String username) {
-        UserDetails userDetails = User.withUsername(username).password("").roles("USER").build();
+    @Test
+    @DisplayName("서로 다른 사용자는 독립적으로 rate limit이 적용된다")
+    void rateLimitIsIsolatedPerUser() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.setRequestURI("/api/v1/analyses");
+
+        // user3 10회 소진
+        setUpSecurityContext(3L);
+        for (int i = 0; i < 10; i++) {
+            rateLimitFilter.doFilterInternal(request, new MockHttpServletResponse(), new MockFilterChain());
+        }
+
+        // user4는 영향 없어야 함
+        setUpSecurityContext(4L);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        rateLimitFilter.doFilterInternal(request, response, new MockFilterChain());
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
+
+    private void setUpSecurityContext(Long userId) {
         UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                new UsernamePasswordAuthenticationToken(userId, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
