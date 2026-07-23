@@ -6,6 +6,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  task:
+    scheduling:
+      enabled: false
   flyway:
     enabled: true
     locations: classpath:db/migration

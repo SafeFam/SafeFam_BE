@@ -104,6 +104,7 @@ public class AuthService {
 
             if (!storedToken.getTokenHash().equals(hashToken(refreshTokenValue))
                     || storedToken.getExpiresAt().isBefore(Instant.now())) {
+                refreshTokenRepository.delete(storedToken);
                 throw new BusinessException(ErrorCode.INVALID_TOKEN);
             }
 
