@@ -59,8 +59,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/password/reset").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/unlock").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(rateLimitFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter(), jwtFilter.getClass())
                 .build();
     }
 

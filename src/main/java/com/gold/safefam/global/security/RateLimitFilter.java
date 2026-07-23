@@ -1,5 +1,6 @@
 package com.gold.safefam.global.security;
 
+import com.gold.safefam.global.exception.ErrorCode;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.annotation.PreDestroy;
@@ -9,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -20,9 +23,13 @@ import java.util.concurrent.TimeUnit;
 
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    private static final String[] RATE_LIMITED_PATHS = {
+    private static final String[] IP_RATE_LIMITED_PATHS = {
             "/api/v1/auth/login",
             "/api/v1/auth/phone-verifications/send"
+    };
+
+    private static final String[] USER_RATE_LIMITED_PATHS = {
+            "/api/v1/analyses"
     };
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
@@ -45,9 +52,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         });
     }
 
-    private Bucket getBucket(String ip) {
-        lastAccess.put(ip, System.currentTimeMillis());
-        return buckets.computeIfAbsent(ip, k -> Bucket.builder()
+    private Bucket getBucket(String key) {
+        lastAccess.put(key, System.currentTimeMillis());
+        return buckets.computeIfAbsent(key, k -> Bucket.builder()
                 .addLimit(Bandwidth.builder()
                         .capacity(10)
                         .refillIntervally(10, Duration.ofMinutes(1))
@@ -63,28 +70,56 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         String method = request.getMethod();
-        boolean isRateLimited = false;
+        String bucketKey = null;
 
         if (HttpMethod.POST.matches(method)) {
-            for (String limited : RATE_LIMITED_PATHS) {
+            for (String limited : IP_RATE_LIMITED_PATHS) {
                 if (path.equals(limited)) {
-                    isRateLimited = true;
+                    bucketKey = "ip:" + request.getRemoteAddr();
                     break;
+                }
+            }
+
+            if (bucketKey == null) {
+                for (String limited : USER_RATE_LIMITED_PATHS) {
+                    if (path.equals(limited)) {
+                        bucketKey = "user:" + resolveUserId();
+                        break;
+                    }
                 }
             }
         }
 
-        if (isRateLimited) {
-            String ip = request.getRemoteAddr();
-            Bucket bucket = getBucket(ip);
+        if (bucketKey != null) {
+            Bucket bucket = getBucket(bucketKey);
             if (!bucket.tryConsume(1)) {
-                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.getWriter().write("Too many requests. Please try again later.");
+                ErrorCode errorCode = bucketKey.startsWith("user:")
+                        ? ErrorCode.ANALYSIS_RATE_LIMIT_EXCEEDED
+                        : ErrorCode.RATE_LIMIT_EXCEEDED;
+                writeRateLimitResponse(response, errorCode);
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeRateLimitResponse(HttpServletResponse response, ErrorCode errorCode)
+            throws IOException {
+        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(
+                "{\"status\":\"ERROR\",\"message\":\"" + errorCode.getMessage() + "\",\"data\":null}"
+        );
+    }
+
+    private String resolveUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()
+                && auth.getPrincipal() instanceof Long userId) {
+            return String.valueOf(userId);
+        }
+        return "anonymous";
     }
 
     @PreDestroy
