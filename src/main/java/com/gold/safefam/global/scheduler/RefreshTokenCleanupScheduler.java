@@ -14,7 +14,7 @@ public class RefreshTokenCleanupScheduler {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
-    @Scheduled(cron = "0 0 3 * * *") // 매일 새벽 3시
+    @Scheduled(cron = "0 0 3 * * *", zone = "${safefam.scheduler.time-zone:Asia/Seoul}")
     @Transactional
     public void cleanupExpiredTokens() {
         refreshTokenRepository.deleteByExpiresAtBefore(Instant.now());
