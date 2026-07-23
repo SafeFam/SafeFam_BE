@@ -9,6 +9,11 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "C001", "잘못된 입력입니다."),
+    RATE_LIMIT_EXCEEDED(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "C002",
+            "요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요."
+    ),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C999", "서버 오류가 발생했습니다."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AU001", "인증이 필요합니다."),
@@ -66,6 +71,12 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND,
             "AN001",
             "탐지 이력을 찾을 수 없습니다."
+    ),
+
+    ANALYSIS_RATE_LIMIT_EXCEEDED(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "AN002",
+            "분석 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요."
     ),
 
     KAKAO_AUTH_FAILED(
