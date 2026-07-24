@@ -7,6 +7,7 @@ import com.gold.safefam.domain.analysis.dto.AnalysisResponse;
 import com.gold.safefam.domain.analysis.entity.Analysis;
 import com.gold.safefam.domain.analysis.entity.AnalysisFeedback;
 import com.gold.safefam.domain.analysis.entity.AnalysisIndicator;
+import com.gold.safefam.domain.analysis.entity.AnalysisKeyword;
 import com.gold.safefam.domain.analysis.entity.AnalysisUrlRisk;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
@@ -48,15 +49,18 @@ public class AnalysisService {
     private final AnalysisRepository analysisRepository;
     private final AnalysisFeedbackRepository analysisFeedbackRepository;
     private final AnalysisResponseMapper responseMapper;
+    private final RiskKeywordExtractor keywordExtractor;
     private final DeviceRepository deviceRepository;
     private final FcmService fcmService;
 
+    /** 분석 엔진·개인정보 보호·영속화·키워드 추출·알림 컴포넌트를 조합한다. */
     public AnalysisService(
             MessageRiskAnalyzer riskAnalyzer,
             MessageContentProtector contentProtector,
             AnalysisRepository analysisRepository,
             AnalysisFeedbackRepository analysisFeedbackRepository,
             AnalysisResponseMapper responseMapper,
+            RiskKeywordExtractor keywordExtractor,
             DeviceRepository deviceRepository,
             FcmService fcmService
     ) {
@@ -65,6 +69,7 @@ public class AnalysisService {
         this.analysisRepository = analysisRepository;
         this.analysisFeedbackRepository = analysisFeedbackRepository;
         this.responseMapper = responseMapper;
+        this.keywordExtractor = keywordExtractor;
         this.deviceRepository = deviceRepository;
         this.fcmService = fcmService;
     }
@@ -93,6 +98,8 @@ public class AnalysisService {
         result.urls().forEach(url -> analysis.addUrlRisk(
                 new AnalysisUrlRisk(url.originalUrl(), url.shortened(), url.suspicious())
         ));
+        keywordExtractor.extract(request.content())
+                .forEach(keyword -> analysis.addKeyword(new AnalysisKeyword(keyword)));
 
         Analysis saved = analysisRepository.save(analysis);
         sendPushNotification(userId, saved.getRiskLevel(), saved.getId());

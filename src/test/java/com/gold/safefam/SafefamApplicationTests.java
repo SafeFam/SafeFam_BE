@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** 애플리케이션 컨텍스트 기동과 핵심 API의 OpenAPI 문서 노출을 검증한다. */
 @SpringBootTest
 @ActiveProfiles("test")
 class SafefamApplicationTests {
@@ -19,10 +20,12 @@ class SafefamApplicationTests {
     @Autowired
     private WebApplicationContext context;
 
+    /** 전체 Spring Bean과 JPA 매핑이 테스트 환경에서 정상 초기화되는지 확인한다. */
     @Test
     void contextLoads() {
     }
 
+    /** 기존 API와 신규 화이트리스트·신고·트렌드 경로가 OpenAPI에 포함되는지 확인한다. */
     @Test
     void openApiDocumentContainsCoreEndpoints() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
@@ -39,7 +42,10 @@ class SafefamApplicationTests {
         assertTrue(openApiDocument.contains("/api/v1/users/me"));
         assertTrue(openApiDocument.contains("/api/v1/analyses"));
         assertTrue(openApiDocument.contains("/api/v1/statistics/overview"));
+        assertTrue(openApiDocument.contains("/api/v1/statistics/trends"));
         assertTrue(openApiDocument.contains("/api/v1/devices"));
+        assertTrue(openApiDocument.contains("/api/v1/whitelists"));
+        assertTrue(openApiDocument.contains("/api/v1/analyses/{analysisId}/report"));
     }
 
 }
