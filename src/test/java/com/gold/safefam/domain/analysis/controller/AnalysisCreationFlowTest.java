@@ -99,6 +99,9 @@ class AnalysisCreationFlowTest {
             assertTrue(stored.getContentPreview().contains("[URL]"));
             assertFalse(stored.getIndicators().isEmpty());
             assertFalse(stored.getUrlRisks().isEmpty());
+            assertFalse(stored.getKeywords().isEmpty());
+            assertTrue(stored.getKeywords().stream()
+                    .allMatch(keyword -> keyword.getKeyword().length() <= 50));
         });
     }
 

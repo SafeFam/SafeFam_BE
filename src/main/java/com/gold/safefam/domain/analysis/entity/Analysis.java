@@ -92,6 +92,10 @@ public class Analysis {
     @OrderBy("id ASC")
     private final List<AnalysisUrlRisk> urlRisks = new ArrayList<>();
 
+    @OneToMany(mappedBy = "analysis", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
+    private final List<AnalysisKeyword> keywords = new ArrayList<>();
+
     public Analysis(
             Long userId,
             String clientMessageId,
@@ -135,5 +139,11 @@ public class Analysis {
     public void addUrlRisk(AnalysisUrlRisk urlRisk) {
         urlRisk.attachTo(this);
         urlRisks.add(urlRisk);
+    }
+
+    /** 개인정보가 없는 표준 위험 키워드를 Aggregate에 연결한다. */
+    public void addKeyword(AnalysisKeyword keyword) {
+        keyword.attachTo(this);
+        keywords.add(keyword);
     }
 }

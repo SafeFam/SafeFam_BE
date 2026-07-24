@@ -4,6 +4,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+/**
+ * 도메인 예외를 HTTP 상태·내부 코드·사용자 메시지로 일관되게 매핑한다.
+ * 화이트리스트 오류는 WL 접두사를 사용해 다른 도메인과 구분한다.
+ */
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
@@ -77,6 +81,20 @@ public enum ErrorCode {
             HttpStatus.TOO_MANY_REQUESTS,
             "AN002",
             "분석 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요."
+    ),
+
+    /** 존재하지 않거나 다른 사용자가 소유한 화이트리스트 항목을 동일하게 숨긴다. */
+    WHITELIST_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "WL001",
+            "화이트리스트 항목을 찾을 수 없습니다."
+    ),
+
+    /** 같은 사용자가 정규화 결과가 같은 발신자를 중복 등록하지 못하게 한다. */
+    WHITELIST_DUPLICATE(
+            HttpStatus.CONFLICT,
+            "WL002",
+            "이미 화이트리스트에 등록된 발신자입니다."
     ),
 
     KAKAO_AUTH_FAILED(

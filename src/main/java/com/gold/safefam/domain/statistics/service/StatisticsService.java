@@ -6,12 +6,18 @@ import com.gold.safefam.domain.analysis.repository.AnalysisRepository;
 import com.gold.safefam.domain.statistics.dto.StatisticsOverviewResponse;
 import com.gold.safefam.domain.statistics.dto.StatisticsOverviewResponse.CategoryBucket;
 import com.gold.safefam.domain.statistics.dto.StatisticsOverviewResponse.RiskBucket;
+import com.gold.safefam.domain.statistics.dto.TrendCardResponse;
+import com.gold.safefam.domain.statistics.dto.TrendCardResponse.PhishingTypeTrend;
+import com.gold.safefam.domain.statistics.dto.TrendCardResponse.RiskKeywordTrend;
 import com.gold.safefam.domain.statistics.enums.StatisticsPeriod;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -22,6 +28,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Service
 public class StatisticsService {
+
+    private static final ZoneId SERVICE_ZONE = ZoneId.of("Asia/Seoul");
+    private static final List<RiskLevel> TREND_RISK_LEVELS = List.of(
+            RiskLevel.MEDIUM,
+            RiskLevel.HIGH
+    );
 
     private final AnalysisRepository analysisRepository;
 
@@ -59,6 +71,63 @@ public class StatisticsService {
                 riskDistribution,
                 categoryDistribution
         );
+    }
+
+    /** 월간 익명 탐지를 집계해 피싱 유형 Top 3와 표준 위험 키워드 Top 5를 반환한다. */
+    @Transactional(readOnly = true)
+    public TrendCardResponse getTrendCards(String requestedMonth) {
+        YearMonth month = requestedMonth == null
+                ? YearMonth.now(SERVICE_ZONE)
+                : YearMonth.parse(requestedMonth);
+        OffsetDateTime fromAt = month.atDay(1).atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
+        OffsetDateTime toExclusive = month.plusMonths(1)
+                .atDay(1)
+                .atStartOfDay(SERVICE_ZONE)
+                .toOffsetDateTime();
+
+        long sampleSize = analysisRepository.countTrendSamples(
+                fromAt,
+                toExclusive,
+                TREND_RISK_LEVELS
+        );
+
+        List<AnalysisRepository.CategoryCount> categoryCounts =
+                analysisRepository.findTopTrendCategories(
+                        fromAt,
+                        toExclusive,
+                        TREND_RISK_LEVELS,
+                        PhishingCategory.OTHER,
+                        PageRequest.of(0, 3)
+                );
+        List<PhishingTypeTrend> topPhishingTypes = java.util.stream.IntStream
+                .range(0, categoryCounts.size())
+                .mapToObj(index -> new PhishingTypeTrend(
+                        index + 1,
+                        categoryCounts.get(index).getCategory(),
+                        categoryCounts.get(index).getCount()
+                ))
+                .toList();
+
+        List<AnalysisRepository.KeywordCount> keywordCounts =
+                analysisRepository.findTopTrendKeywords(
+                        fromAt,
+                        toExclusive,
+                        TREND_RISK_LEVELS,
+                        PageRequest.of(0, 5)
+                );
+        List<RiskKeywordTrend> topRiskKeywords = java.util.stream.IntStream
+                .range(0, keywordCounts.size())
+                .mapToObj(index -> {
+                    AnalysisRepository.KeywordCount count = keywordCounts.get(index);
+                    return new RiskKeywordTrend(
+                            index + 1,
+                            count.getKeyword(),
+                            count.getCount()
+                    );
+                })
+                .toList();
+
+        return new TrendCardResponse(month, sampleSize, topPhishingTypes, topRiskKeywords);
     }
 
     /** ALL은 시작 시점을 두지 않고, 나머지는 현재 시점에서 지정 일수를 뺀다. */

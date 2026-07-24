@@ -88,6 +88,57 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
             @Param("fromAt") OffsetDateTime fromAt
     );
 
+    /** 지정 월의 중·고위험 탐지를 사용자 식별자 없이 전체 표본 수로 집계한다. */
+    @Query("""
+            SELECT COUNT(analysis)
+            FROM Analysis analysis
+            WHERE analysis.analyzedAt >= :fromAt
+              AND analysis.analyzedAt < :toExclusive
+              AND analysis.riskLevel IN :riskLevels
+            """)
+    long countTrendSamples(
+            @Param("fromAt") OffsetDateTime fromAt,
+            @Param("toExclusive") OffsetDateTime toExclusive,
+            @Param("riskLevels") List<RiskLevel> riskLevels
+    );
+
+    /** 지정 월의 중·고위험 탐지를 피싱 유형별로 내림차순 집계한다. */
+    @Query("""
+            SELECT analysis.category AS category, COUNT(analysis) AS count
+            FROM Analysis analysis
+            WHERE analysis.analyzedAt >= :fromAt
+              AND analysis.analyzedAt < :toExclusive
+              AND analysis.riskLevel IN :riskLevels
+              AND analysis.category <> :excludedCategory
+            GROUP BY analysis.category
+            ORDER BY COUNT(analysis) DESC, analysis.category ASC
+            """)
+    List<CategoryCount> findTopTrendCategories(
+            @Param("fromAt") OffsetDateTime fromAt,
+            @Param("toExclusive") OffsetDateTime toExclusive,
+            @Param("riskLevels") List<RiskLevel> riskLevels,
+            @Param("excludedCategory") PhishingCategory excludedCategory,
+            Pageable pageable
+    );
+
+    /** 지정 월의 중·고위험 탐지에서 개인정보 없는 표준 위험 키워드를 집계한다. */
+    @Query("""
+            SELECT keyword.keyword AS keyword, COUNT(keyword) AS count
+            FROM Analysis analysis
+            JOIN analysis.keywords keyword
+            WHERE analysis.analyzedAt >= :fromAt
+              AND analysis.analyzedAt < :toExclusive
+              AND analysis.riskLevel IN :riskLevels
+            GROUP BY keyword.keyword
+            ORDER BY COUNT(keyword) DESC, keyword.keyword ASC
+            """)
+    List<KeywordCount> findTopTrendKeywords(
+            @Param("fromAt") OffsetDateTime fromAt,
+            @Param("toExclusive") OffsetDateTime toExclusive,
+            @Param("riskLevels") List<RiskLevel> riskLevels,
+            Pageable pageable
+    );
+
     /** 위험 등급별 집계 결과를 받는 조회 전용 프로젝션이다. */
     interface RiskCount {
         RiskLevel getRiskLevel();
@@ -98,6 +149,13 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
     /** 피싱 유형별 집계 결과를 받는 조회 전용 프로젝션이다. */
     interface CategoryCount {
         PhishingCategory getCategory();
+
+        long getCount();
+    }
+
+    /** 표준 위험 키워드별 집계 결과를 받는 조회 전용 프로젝션이다. */
+    interface KeywordCount {
+        String getKeyword();
 
         long getCount();
     }
