@@ -17,6 +17,7 @@ import com.gold.safefam.domain.analysis.privacy.MessageContentProtector;
 import com.gold.safefam.domain.analysis.privacy.MessageContentProtector.ProtectedContent;
 import com.gold.safefam.domain.analysis.repository.AnalysisFeedbackRepository;
 import com.gold.safefam.domain.analysis.repository.AnalysisRepository;
+import com.gold.safefam.domain.family.service.FamilyNotificationService;
 import com.gold.safefam.domain.notification.entity.Device;
 import com.gold.safefam.domain.notification.repository.DeviceRepository;
 import com.gold.safefam.domain.notification.service.FcmService;
@@ -52,6 +53,7 @@ public class AnalysisService {
     private final RiskKeywordExtractor keywordExtractor;
     private final DeviceRepository deviceRepository;
     private final FcmService fcmService;
+    private final FamilyNotificationService familyNotificationService;
 
     /** 분석 엔진·개인정보 보호·영속화·키워드 추출·알림 컴포넌트를 조합한다. */
     public AnalysisService(
@@ -62,7 +64,8 @@ public class AnalysisService {
             AnalysisResponseMapper responseMapper,
             RiskKeywordExtractor keywordExtractor,
             DeviceRepository deviceRepository,
-            FcmService fcmService
+            FcmService fcmService,
+            FamilyNotificationService familyNotificationService
     ) {
         this.riskAnalyzer = riskAnalyzer;
         this.contentProtector = contentProtector;
@@ -72,6 +75,7 @@ public class AnalysisService {
         this.keywordExtractor = keywordExtractor;
         this.deviceRepository = deviceRepository;
         this.fcmService = fcmService;
+        this.familyNotificationService = familyNotificationService;
     }
 
     /** 인증 사용자 기준으로 중복 확인, 분석, 원문 보호, 저장, 응답 변환을 수행한다. */
@@ -103,6 +107,11 @@ public class AnalysisService {
 
         Analysis saved = analysisRepository.save(analysis);
         sendPushNotification(userId, saved.getRiskLevel(), saved.getId());
+
+        if (saved.getRiskLevel() == RiskLevel.HIGH) {
+            familyNotificationService.mirrorHighRiskToGuardians(userId, saved.getExplanation(), saved.getId());
+        }
+
         return responseMapper.toResponse(saved);
     }
 
