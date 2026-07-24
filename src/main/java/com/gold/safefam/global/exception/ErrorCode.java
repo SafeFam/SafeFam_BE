@@ -131,6 +131,36 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND,
             "NO001",
             "등록된 기기를 찾을 수 없습니다."
+    ),
+
+    FAMILY_INVITE_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "FA001",
+                    "유효하지 않은 초대 코드입니다."
+    ),
+
+    FAMILY_INVITE_EXPIRED(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "FA002",
+                    "만료된 초대 코드입니다."
+    ),
+
+    FAMILY_LINK_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "FA003",
+                    "가족 연결 정보를 찾을 수 없습니다."
+    ),
+
+    FAMILY_LINK_FORBIDDEN(
+            HttpStatus.FORBIDDEN,
+            "FA004",
+                    "해당 가족 연결에 접근할 권한이 없습니다."
+    ),
+
+    FAMILY_SELF_LINK(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "FA005",
+                    "자기 자신과 연결할 수 없습니다."
     );
 
     private final HttpStatus status;
