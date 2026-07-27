@@ -27,14 +27,14 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
 
     /** 사용자 소유 이력을 위험 등급·피싱 유형·날짜 범위로 필터링한다. */
     @Query("""
-            SELECT analysis
-            FROM Analysis analysis
-            WHERE analysis.userId = :userId
-              AND (:riskLevel IS NULL OR analysis.riskLevel = :riskLevel)
-              AND (:category IS NULL OR analysis.category = :category)
-              AND (:fromAt IS NULL OR analysis.analyzedAt >= :fromAt)
-              AND (:toExclusive IS NULL OR analysis.analyzedAt < :toExclusive)
-            """)
+        SELECT analysis
+        FROM Analysis analysis
+        WHERE analysis.userId = :userId
+          AND (:riskLevel IS NULL OR analysis.riskLevel = :riskLevel)
+          AND (:category IS NULL OR analysis.category = :category)
+          AND analysis.analyzedAt >= :fromAt
+          AND analysis.analyzedAt < :toExclusive
+        """)
     Page<Analysis> search(
             @Param("userId") Long userId,
             @Param("riskLevel") RiskLevel riskLevel,
