@@ -1,5 +1,7 @@
 package com.gold.safefam.domain.family.service;
 
+import com.gold.safefam.domain.analysis.dto.AnalysisListItemResponse;
+import com.gold.safefam.domain.analysis.service.AnalysisService;
 import com.gold.safefam.domain.family.dto.FamilyInviteResponse;
 import com.gold.safefam.domain.family.dto.FamilyMemberResponse;
 import com.gold.safefam.domain.family.entity.FamilyLink;
@@ -9,6 +11,7 @@ import com.gold.safefam.domain.user.entity.User;
 import com.gold.safefam.domain.user.repository.UserRepository;
 import com.gold.safefam.global.exception.BusinessException;
 import com.gold.safefam.global.exception.ErrorCode;
+import com.gold.safefam.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,7 @@ public class FamilyService {
 
     private final FamilyLinkRepository familyLinkRepository;
     private final UserRepository userRepository;
+    private final AnalysisService analysisService;
 
     // ─── 초대 생성 (보호자) ────────────────────────────────────
 
@@ -101,6 +105,13 @@ public class FamilyService {
         if (!linked) {
             throw new BusinessException(ErrorCode.FAMILY_LINK_FORBIDDEN);
         }
+    }
+
+    // ─── 피보호자 탐지 이력 조회 (보호자) ─────────────────────────
+
+    public PageResponse<AnalysisListItemResponse> getWardLogs(Long protectorId, Long wardId, int page, int size) {
+        validateGuardianAccess(protectorId, wardId);
+        return analysisService.getAnalyses(wardId, page, size, null, null, null, null);
     }
 
     // ─── private ───────────────────────────────────────────────
