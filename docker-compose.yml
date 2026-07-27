@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   spring-backend:
@@ -7,6 +7,42 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=local
-      - AI_SERVER_URL=http://localhost:8000
-      - JWT_SECRET=${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: local
+      AI_SERVER_URL: http://fastapi-ai:8000
+      JWT_SECRET: ${JWT_SECRET}
+
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - safefam-network
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: safefam-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - safefam-network
+
+volumes:
+  rabbitmq-data:
+
+networks:
+  safefam-network:
+    driver: bridge

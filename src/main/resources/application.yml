@@ -50,6 +50,16 @@ solapi:
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
 
+rabbitmq:
+  host: ${RABBITMQ_HOST:localhost}
+  port: ${RABBITMQ_PORT:5672}
+  username: ${RABBITMQ_USERNAME}
+  password: ${RABBITMQ_PASSWORD}
+  publisher-confirm-type: correlated
+  publisher-returns: true
+  template:
+    mandatory: true
+
 safefam:
   scheduler:
     time-zone: Asia/Seoul
