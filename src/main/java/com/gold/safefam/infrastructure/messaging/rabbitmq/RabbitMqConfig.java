@@ -1,4 +1,4 @@
-package com.gold.safefam.instrastructure.messaging.rabbitmq;
+package com.gold.safefam.infrastructure.messaging.rabbitmq;
 
 import org.springframework.amqp.core.*;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

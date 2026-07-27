@@ -1,8 +1,9 @@
 package com.gold.safefam.domain.analysis.messaging.event;
 
+import com.gold.safefam.domain.analysis.enums.AnalysisSource;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record AnalysisRequestedEvent(
@@ -14,12 +15,12 @@ public record AnalysisRequestedEvent(
         Instant occurredAt,
         Payload payload
 ) {
+
     public record Payload(
             String sender,
             String content,
-            LocalDateTime receivedAt,
-            String souce
+            OffsetDateTime receivedAt,
+            AnalysisSource source
     ) {
-
     }
 }

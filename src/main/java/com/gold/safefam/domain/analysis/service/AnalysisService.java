@@ -1,9 +1,6 @@
 package com.gold.safefam.domain.analysis.service;
 
-import com.gold.safefam.domain.analysis.dto.AnalysisFeedbackRequest;
-import com.gold.safefam.domain.analysis.dto.AnalysisListItemResponse;
-import com.gold.safefam.domain.analysis.dto.AnalysisRequest;
-import com.gold.safefam.domain.analysis.dto.AnalysisResponse;
+import com.gold.safefam.domain.analysis.dto.*;
 import com.gold.safefam.domain.analysis.entity.Analysis;
 import com.gold.safefam.domain.analysis.entity.AnalysisFeedback;
 import com.gold.safefam.domain.analysis.entity.AnalysisIndicator;
@@ -24,6 +21,7 @@ import com.gold.safefam.domain.notification.service.FcmService;
 import com.gold.safefam.global.exception.BusinessException;
 import com.gold.safefam.global.exception.ErrorCode;
 import com.gold.safefam.global.response.PageResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -54,6 +52,7 @@ public class AnalysisService {
     private final DeviceRepository deviceRepository;
     private final FcmService fcmService;
     private final FamilyNotificationService familyNotificationService;
+    private final AnalysisRequestWriter analysisRequestWriter;
 
     /** 분석 엔진·개인정보 보호·영속화·키워드 추출·알림 컴포넌트를 조합한다. */
     public AnalysisService(
@@ -65,7 +64,8 @@ public class AnalysisService {
             RiskKeywordExtractor keywordExtractor,
             DeviceRepository deviceRepository,
             FcmService fcmService,
-            FamilyNotificationService familyNotificationService
+            FamilyNotificationService familyNotificationService,
+            AnalysisRequestWriter analysisRequestWriter
     ) {
         this.riskAnalyzer = riskAnalyzer;
         this.contentProtector = contentProtector;
@@ -76,6 +76,54 @@ public class AnalysisService {
         this.deviceRepository = deviceRepository;
         this.fcmService = fcmService;
         this.familyNotificationService = familyNotificationService;
+        this.analysisRequestWriter = analysisRequestWriter;
+    }
+
+    /* 비동기 분석 요청 접수 후 PENDING으로 저장,
+        실제 AI 분석과 결과 반영은 RabbitMQ 기반 후속 처리에서 수행
+     */
+    public AnalysisAcceptedResponse requestAnalysis(
+            Long userId,
+            AnalysisRequest request
+    ) {
+        String clientMessageId =
+                normalizeClientMessageId(request.clientMessageId());
+
+        if (clientMessageId != null) {
+            Analysis existing = analysisRepository
+                    .findByUserIdAndClientMessageId(userId, clientMessageId)
+                    .orElse(null);
+
+            if (existing != null) {
+                return new AnalysisAcceptedResponse(
+                        existing.getId(),
+                        existing.getStatus()
+                );
+            }
+        }
+
+        ProtectedContent protectedContent =
+                contentProtector.protect(request.content());
+
+        try {
+            return analysisRequestWriter.create(
+                    userId,
+                    clientMessageId,
+                    request,
+                    protectedContent
+            );
+        } catch (DataIntegrityViolationException exception) {
+            return analysisRepository
+                    .findByUserIdAndClientMessageId(
+                            userId,
+                            clientMessageId
+                    )
+                    .map(existing -> new AnalysisAcceptedResponse(
+                            existing.getId(),
+                            existing.getStatus()
+                    ))
+                    .orElseThrow(() -> exception);
+        }
     }
 
     /** 인증 사용자 기준으로 중복 확인, 분석, 원문 보호, 저장, 응답 변환을 수행한다. */

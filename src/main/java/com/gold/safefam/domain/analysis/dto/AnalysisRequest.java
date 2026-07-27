@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 
 @Schema(description = "문자 분석 요청")
 public record AnalysisRequest(
+        @NotBlank
         @Size(max = 100)
         @Schema(description = "동일 문자 중복 분석 방지를 위한 클라이언트 식별자", example = "sms-20260628-001")
         String clientMessageId,

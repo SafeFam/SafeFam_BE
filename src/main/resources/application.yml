@@ -68,5 +68,7 @@ safefam:
       request-queue: safefam.analysis.requested.q
       request-routing-key: analysis.requested.v1
       publisher-enabled: ${ANALYSIS_PUBLISHER_ENABLED:true}
+    outbox:
+      encryption-key: ${OUTBOX_ENCRYPTION_KEY_BASE64}
   scheduler:
     time-zone: Asia/Seoul

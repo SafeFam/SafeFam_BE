@@ -15,6 +15,8 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      OUTBOX_ENCRYPTION_KEY_BASE64: ${OUTBOX_ENCRYPTION_KEY_BASE64}
     depends_on:
       rabbitmq:
         condition: service_healthy

@@ -1,9 +1,6 @@
 package com.gold.safefam.domain.analysis.controller;
 
-import com.gold.safefam.domain.analysis.dto.AnalysisFeedbackRequest;
-import com.gold.safefam.domain.analysis.dto.AnalysisListItemResponse;
-import com.gold.safefam.domain.analysis.dto.AnalysisRequest;
-import com.gold.safefam.domain.analysis.dto.AnalysisResponse;
+import com.gold.safefam.domain.analysis.dto.*;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
 import com.gold.safefam.domain.analysis.service.AnalysisService;
@@ -31,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.time.LocalDate;
 
 /**
@@ -48,16 +46,28 @@ public class AnalysisController {
     private final AnalysisService analysisService;
 
     @Operation(
-            summary = "문자 분석",
-            description = "문자 패턴과 URL 형태를 규칙 기반으로 분석해 위험도와 탐지 근거를 반환합니다."
+            summary = "문자 분석 요청",
+            description = "문자 분석 요청을 비동기로 접수하고 분석 식별자와 현재 상태를 반환합니다."
     )
     @PostMapping
-    public ResponseEntity<ApiResponse<AnalysisResponse>> analyze(
+    public ResponseEntity<ApiResponse<AnalysisAcceptedResponse>> requestAnalysis(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody AnalysisRequest request
     ) {
-        AnalysisResponse response = analysisService.analyze(userId, request);
-        return ResponseEntity.ok(ApiResponse.success("문자 분석이 완료되었습니다.", response));
+        AnalysisAcceptedResponse response =
+                analysisService.requestAnalysis(userId, request);
+
+        URI location = URI.create(
+                "/api/v1/analyses/" + response.analysisId()
+        );
+
+        return ResponseEntity
+                .accepted()
+                .location(location)
+                .body(ApiResponse.success(
+                        "문자 분석 요청이 접수되었습니다.",
+                        response
+                ));
     }
 
     /** 인증 사용자의 탐지 이력을 페이지 단위로 필터링해 반환한다. */
