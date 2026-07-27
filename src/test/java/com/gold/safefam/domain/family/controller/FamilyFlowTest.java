@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /** 초대 생성 → 수락 → 목록 조회 → 해제 전체 플로우를 검증한다. */
 @SpringBootTest
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class FamilyFlowTest {
 
     @Autowired private WebApplicationContext context;
@@ -193,5 +195,38 @@ class FamilyFlowTest {
     void unauthenticatedRequest_isRejected() throws Exception {
         mockMvc.perform(post("/api/v1/family/invite"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void guardianCanViewWardLogs() throws Exception {
+        // 연결 생성
+        transactionTemplate.executeWithoutResult(status -> {
+            User guardian = userRepository.findById(guardianId).orElseThrow();
+            User ward = userRepository.findById(wardId).orElseThrow();
+            FamilyLink link = FamilyLink.createInvite(
+                    guardian, "123456", "some-qr-token",
+                    java.time.OffsetDateTime.now().plusMinutes(10)
+            );
+            link.accept(ward);
+            familyLinkRepository.save(link);
+        });
+
+        mockMvc.perform(get("/api/v1/family/ward/" + wardId + "/logs")
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content").isArray());
+    }
+
+    @Test
+    void strangerCannotViewWardLogs() throws Exception {
+        User stranger = userRepository.save(new User("01055556666", "encoded-password", "제3자"));
+        String strangerToken = jwtUtil.generateAccessToken(stranger.getId(), stranger.getRole());
+
+        mockMvc.perform(get("/api/v1/family/ward/" + wardId + "/logs")
+                        .header("Authorization", "Bearer " + strangerToken))
+                .andExpect(status().isForbidden());
     }
 }

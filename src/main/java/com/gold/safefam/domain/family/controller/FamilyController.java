@@ -1,11 +1,13 @@
 package com.gold.safefam.domain.family.controller;
 
+import com.gold.safefam.domain.analysis.dto.AnalysisListItemResponse;
 import com.gold.safefam.domain.family.dto.FamilyInviteResponse;
 import com.gold.safefam.domain.family.dto.FamilyLinkByCodeRequest;
 import com.gold.safefam.domain.family.dto.FamilyLinkByQrRequest;
 import com.gold.safefam.domain.family.dto.FamilyMemberResponse;
 import com.gold.safefam.domain.family.service.FamilyService;
 import com.gold.safefam.global.response.ApiResponse;
+import com.gold.safefam.global.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -74,5 +76,17 @@ public class FamilyController {
     ) {
         List<FamilyMemberResponse> members = familyService.getMembers(protectorId);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "가족 목록을 조회했습니다.", members));
+    }
+
+    @Operation(summary = "피보호자 탐지 이력 조회", description = "보호자가 피보호자의 탐지 이력을 조회합니다.")
+    @GetMapping("/ward/{wardId}/logs")
+    public ResponseEntity<ApiResponse<PageResponse<AnalysisListItemResponse>>> getWardLogs(
+            @AuthenticationPrincipal Long protectorId,
+            @PathVariable Long wardId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<AnalysisListItemResponse> logs = familyService.getWardLogs(protectorId, wardId, page, size);
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "피보호자 탐지 이력을 조회했습니다.", logs));
     }
 }
