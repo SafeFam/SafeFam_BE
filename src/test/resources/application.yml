@@ -17,3 +17,10 @@ jwt:
   secret: c2FmZWZhbS1zZWNyZXQta2V5LWZvci1qd3QtYXV0aGVudGljYXRpb24=
   access-token-expiration: 1800000
   refresh-token-expiration: 604800000
+
+safefam:
+  messaging:
+    analysis:
+      publisher-enabled: false
+    outbox:
+      encryption-key: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=

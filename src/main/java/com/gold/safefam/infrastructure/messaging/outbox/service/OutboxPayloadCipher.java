@@ -1,4 +1,4 @@
-package com.gold.safefam.infrastructure.messaging.outbox;
+package com.gold.safefam.infrastructure.messaging.outbox.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

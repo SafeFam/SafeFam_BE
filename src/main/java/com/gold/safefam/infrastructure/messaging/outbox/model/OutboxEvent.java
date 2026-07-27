@@ -1,4 +1,4 @@
-package com.gold.safefam.infrastructure.messaging.outbox;
+package com.gold.safefam.infrastructure.messaging.outbox.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -85,5 +85,45 @@ public class OutboxEvent {
         event.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
 
         return event;
+    }
+
+    public void markProcessing(OffsetDateTime recoveryAt) {
+        this.status = OutboxStatus.PROCESSING;
+        this.nextAttemptAt = recoveryAt;
+        this.lastError = null;
+    }
+
+    public void markPublished(OffsetDateTime publishedAt) {
+        this.status = OutboxStatus.PUBLISHED;
+        this.publishedAt = publishedAt;
+        this.nextAttemptAt = null;
+        this.lastError = null;
+    }
+
+    public void markRetry(
+            OffsetDateTime nextAttemptAt,
+            String errorMessage
+    ) {
+        this.status = OutboxStatus.PENDING;
+        this.attempts++;
+        this.nextAttemptAt = nextAttemptAt;
+        this.lastError = limitErrorMessage(errorMessage);
+    }
+
+    public void markFailed(String errorMessage) {
+        this.status = OutboxStatus.FAILED;
+        this.attempts++;
+        this.nextAttemptAt = null;
+        this.lastError = limitErrorMessage(errorMessage);
+    }
+
+    private String limitErrorMessage(String errorMessage) {
+        if (errorMessage == null || errorMessage.isBlank()) {
+            return "Unknown publishing error";
+        }
+
+        return errorMessage.length() <= 500
+                ? errorMessage
+                : errorMessage.substring(0, 500);
     }
 }
