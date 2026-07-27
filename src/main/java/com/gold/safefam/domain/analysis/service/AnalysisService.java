@@ -127,8 +127,12 @@ public class AnalysisService {
             LocalDate to
     ) {
         validateDateRange(from, to);
-        OffsetDateTime fromAt = toStartOfDay(from);
-        OffsetDateTime toExclusive = toStartOfNextDay(to);
+        OffsetDateTime fromAt = from != null
+                ? toStartOfDay(from)
+                : OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+        OffsetDateTime toExclusive = to != null
+                ? toStartOfNextDay(to)
+                : OffsetDateTime.of(9999, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
         PageRequest pageable = PageRequest.of(
                 page,
                 size,
@@ -227,11 +231,11 @@ public class AnalysisService {
     }
 
     private OffsetDateTime toStartOfDay(LocalDate date) {
-        return date == null ? null : date.atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
+        return date.atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
     }
 
     private OffsetDateTime toStartOfNextDay(LocalDate date) {
-        return date == null ? null : date.plusDays(1).atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
+        return date.plusDays(1).atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
     }
 
     private void sendPushNotification(Long userId, RiskLevel riskLevel, Long analysisId) {
