@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -83,8 +85,8 @@ public class FamilyController {
     public ResponseEntity<ApiResponse<PageResponse<AnalysisListItemResponse>>> getWardLogs(
             @AuthenticationPrincipal Long protectorId,
             @PathVariable Long wardId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size
     ) {
         PageResponse<AnalysisListItemResponse> logs = familyService.getWardLogs(protectorId, wardId, page, size);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "피보호자 탐지 이력을 조회했습니다.", logs));

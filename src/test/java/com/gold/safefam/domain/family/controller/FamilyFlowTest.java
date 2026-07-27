@@ -199,7 +199,6 @@ class FamilyFlowTest {
 
     @Test
     void guardianCanViewWardLogs() throws Exception {
-        // 연결 생성
         transactionTemplate.executeWithoutResult(status -> {
             User guardian = userRepository.findById(guardianId).orElseThrow();
             User ward = userRepository.findById(wardId).orElseThrow();
@@ -214,14 +213,28 @@ class FamilyFlowTest {
         mockMvc.perform(get("/api/v1/family/ward/" + wardId + "/logs")
                         .header("Authorization", "Bearer " + guardianToken)
                         .param("page", "0")
-                        .param("size", "20"))
+                        .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.size").value(10));
     }
 
     @Test
     void strangerCannotViewWardLogs() throws Exception {
+        // 보호자-피보호자 실제 연결 생성
+        transactionTemplate.executeWithoutResult(status -> {
+            User guardian = userRepository.findById(guardianId).orElseThrow();
+            User ward = userRepository.findById(wardId).orElseThrow();
+            FamilyLink link = FamilyLink.createInvite(
+                    guardian, "123456", "some-qr-token",
+                    java.time.OffsetDateTime.now().plusMinutes(10)
+            );
+            link.accept(ward);
+            familyLinkRepository.save(link);
+        });
+
         User stranger = userRepository.save(new User("01055556666", "encoded-password", "제3자"));
         String strangerToken = jwtUtil.generateAccessToken(stranger.getId(), stranger.getRole());
 
