@@ -1,4 +1,4 @@
-package com.gold.safefam.instrastructure.messaging.rabbimq;
+package com.gold.safefam.instrastructure.messaging.rabbitmq;
 
 import org.springframework.amqp.core.*;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -12,7 +12,7 @@ public class RabbitMqConfig {
     // Exchange 생성
     @Bean
     TopicExchange analysisExchange(RabbitMqProperties properties) {
-        return new TopicExchange(properties.excahnge(), true, false);
+        return new TopicExchange(properties.exchange(), true, false);
     }
 
     // Queue 생성

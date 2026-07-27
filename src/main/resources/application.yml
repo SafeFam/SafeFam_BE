@@ -20,6 +20,17 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:amqp://safefam:safefam-local@localhost:5672}
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:safefam}
+    password: ${RABBITMQ_PASSWORD:safefam-local}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -50,23 +61,12 @@ solapi:
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
 
-rabbitmq:
-  addresses: ${RABBITMQ_URL:amqp://safefam:safefam-local@localhost:5672}
-  host: ${RABBITMQ_HOST:localhost}
-  port: ${RABBITMQ_PORT:5672}
-  username: ${RABBITMQ_USERNAME}
-  password: ${RABBITMQ_PASSWORD}
-  publisher-confirm-type: correlated
-  publisher-returns: true
-  template:
-    mandatory: true
-
 safefam:
   messaging:
     analysis:
       exchange: safefam.analysis
       request-queue: safefam.analysis.requested.q
       request-routing-key: analysis.requested.v1
-      publisher-enabled: ${ANALYSIS_PUBLISHER_ENABLED:tru
+      publisher-enabled: ${ANALYSIS_PUBLISHER_ENABLED:true}
   scheduler:
     time-zone: Asia/Seoul

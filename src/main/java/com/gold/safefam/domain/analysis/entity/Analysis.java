@@ -3,6 +3,7 @@ package com.gold.safefam.domain.analysis.entity;
 import com.gold.safefam.domain.analysis.enums.AnalysisSource;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
+import com.gold.safefam.domain.analysis.enums.AnalysisStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -52,36 +53,40 @@ public class Analysis {
     private String contentPreview;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "sms_type", nullable = false, length = 30)
+    @Column(name = "sms_type", length = 30)
     private PhishingCategory category;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AnalysisSource source;
 
-    @Column(name = "llm_score", nullable = false)
-    private int llmScore;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "analysis_status", nullable = false, length = 30)
+    private AnalysisStatus status;
 
-    @Column(name = "url_score", nullable = false)
-    private int urlScore;
+    @Column(name = "llm_score")
+    private Integer llmScore;
 
-    @Column(name = "pattern_score", nullable = false)
-    private int patternScore;
+    @Column(name = "url_score")
+    private Integer urlScore;
 
-    @Column(name = "total_score", nullable = false)
-    private int totalScore;
+    @Column(name = "pattern_score")
+    private Integer patternScore;
+
+    @Column(name = "total_score")
+    private Integer totalScore;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "risk_level", nullable = false, length = 10)
+    @Column(name = "risk_level", length = 10)
     private RiskLevel riskLevel;
 
-    @Column(name = "ai_explanation", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "ai_explanation", columnDefinition = "TEXT")
     private String explanation;
 
     @Column(name = "received_at", nullable = false)
     private OffsetDateTime receivedAt;
 
-    @Column(name = "detected_at", nullable = false)
+    @Column(name = "detected_at")
     private OffsetDateTime analyzedAt;
 
     @OneToMany(mappedBy = "analysis", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -119,6 +124,7 @@ public class Analysis {
         this.contentPreview = contentPreview;
         this.category = category;
         this.source = source;
+        this.status = AnalysisStatus.COMPLETED;
         this.llmScore = 0;
         this.urlScore = urlScore;
         this.patternScore = patternScore;
@@ -127,6 +133,38 @@ public class Analysis {
         this.explanation = explanation;
         this.receivedAt = receivedAt;
         this.analyzedAt = analyzedAt;
+    }
+
+    public static Analysis pending(
+            Long userId,
+            String clientMessageId,
+            String sender,
+            String contentHash,
+            String contentPreview,
+            AnalysisSource source,
+            OffsetDateTime receivedAt
+    ) {
+        Analysis analysis = new Analysis();
+
+        analysis.userId = userId;
+        analysis.clientMessageId = clientMessageId;
+        analysis.sender = sender;
+        analysis.contentHash = contentHash;
+        analysis.contentPreview = contentPreview;
+        analysis.source = source;
+        analysis.receivedAt = receivedAt;
+        analysis.status = AnalysisStatus.PENDING;
+
+        analysis.category = null;
+        analysis.llmScore = null;
+        analysis.urlScore = null;
+        analysis.patternScore = null;
+        analysis.totalScore = null;
+        analysis.riskLevel = null;
+        analysis.explanation = null;
+        analysis.analyzedAt = null;
+
+        return analysis;
     }
 
     /** 분석 근거를 Aggregate에 연결해 Analysis 저장 트랜잭션에 함께 참여시킨다. */
