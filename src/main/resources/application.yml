@@ -20,6 +20,17 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:amqp://safefam:safefam-local@localhost:5672}
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:safefam}
+    password: ${RABBITMQ_PASSWORD:safefam-local}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -51,5 +62,14 @@ firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
 
 safefam:
+  messaging:
+    analysis:
+      exchange: safefam.analysis
+      request-queue: safefam.analysis.requested.q
+      request-routing-key: analysis.requested.v1
+      publisher-enabled: ${ANALYSIS_PUBLISHER_ENABLED:true}
+      publisher-delay: ${ANALYSIS_PUBLISHER_DELAY:1000}
+    outbox:
+      encryption-key: ${OUTBOX_ENCRYPTION_KEY_BASE64}
   scheduler:
     time-zone: Asia/Seoul

@@ -46,11 +46,12 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
 
     /** 사용자의 전체 분석 결과를 위험 등급별로 집계한다. */
     @Query("""
-            SELECT analysis.riskLevel AS riskLevel, COUNT(analysis) AS count
-            FROM Analysis analysis
-            WHERE analysis.userId = :userId
-            GROUP BY analysis.riskLevel
-            """)
+        SELECT analysis.riskLevel AS riskLevel, COUNT(analysis) AS count
+        FROM Analysis analysis
+        WHERE analysis.userId = :userId
+          AND analysis.riskLevel IS NOT NULL
+        GROUP BY analysis.riskLevel
+        """)
     List<RiskCount> countByRiskLevel(@Param("userId") Long userId);
 
     /** 사용자의 지정 시점 이후 분석 결과를 위험 등급별로 집계한다. */
@@ -68,11 +69,12 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
 
     /** 사용자의 전체 분석 결과를 피싱 유형별로 집계한다. */
     @Query("""
-            SELECT analysis.category AS category, COUNT(analysis) AS count
-            FROM Analysis analysis
-            WHERE analysis.userId = :userId
-            GROUP BY analysis.category
-            """)
+        SELECT analysis.category AS category, COUNT(analysis) AS count
+        FROM Analysis analysis
+        WHERE analysis.userId = :userId
+          AND analysis.category IS NOT NULL
+        GROUP BY analysis.category
+        """)
     List<CategoryCount> countByCategory(@Param("userId") Long userId);
 
     /** 사용자의 지정 시점 이후 분석 결과를 피싱 유형별로 집계한다. */

@@ -6,6 +6,9 @@ import com.gold.safefam.domain.auth.repository.RefreshTokenRepository;
 import com.gold.safefam.domain.user.entity.User;
 import com.gold.safefam.domain.user.repository.UserRepository;
 import com.gold.safefam.global.security.JwtUtil;
+import com.gold.safefam.infrastructure.messaging.outbox.model.OutboxEvent;
+import com.gold.safefam.infrastructure.messaging.outbox.model.OutboxStatus;
+import com.gold.safefam.infrastructure.messaging.outbox.repository.OutboxEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,6 +47,9 @@ class AnalysisCreationFlowTest {
     private AnalysisRepository analysisRepository;
 
     @Autowired
+    private OutboxEventRepository outboxEventRepository;
+
+    @Autowired
     private TransactionTemplate transactionTemplate;
 
     @Autowired
@@ -62,6 +69,7 @@ class AnalysisCreationFlowTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+        outboxEventRepository.deleteAll();
         analysisRepository.deleteAll();
         refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
@@ -75,33 +83,44 @@ class AnalysisCreationFlowTest {
     }
 
     @Test
-    void authenticatedRequestAnalyzesAndStoresProtectedResult() throws Exception {
+    void authenticatedRequestCreatesPendingAnalysisAndEncryptedOutboxEvent() throws Exception {
         mockMvc.perform(post("/api/v1/analyses")
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody("sms-001", DANGEROUS_CONTENT)))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
+                .andExpect(result -> assertTrue(
+                        result.getResponse()
+                                .getHeader("Location")
+                                .matches("/api/v1/analyses/\\d+")
+                ))
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.data.analysisId").isNumber())
-                .andExpect(jsonPath("$.data.riskLevel").value("HIGH"))
-                .andExpect(jsonPath("$.data.category").value("FINANCIAL_INSTITUTION"))
-                .andExpect(jsonPath("$.data.scoreBreakdown.llmScore").value(0))
-                .andExpect(jsonPath("$.data.urls[0].suspicious").value(true));
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
 
         transactionTemplate.executeWithoutResult(status -> {
             assertEquals(1, analysisRepository.count());
             Analysis stored = analysisRepository.findAll().get(0);
+            assertEquals(com.gold.safefam.domain.analysis.enums.AnalysisStatus.PENDING, stored.getStatus());
             assertEquals(64, stored.getContentHash().length());
             assertNotEquals(DANGEROUS_CONTENT, stored.getContentHash());
             assertFalse(stored.getContentPreview().contains("010-1234-5678"));
             assertFalse(stored.getContentPreview().contains("https://bit.ly"));
             assertTrue(stored.getContentPreview().contains("010-****-****"));
             assertTrue(stored.getContentPreview().contains("[URL]"));
-            assertFalse(stored.getIndicators().isEmpty());
-            assertFalse(stored.getUrlRisks().isEmpty());
-            assertFalse(stored.getKeywords().isEmpty());
-            assertTrue(stored.getKeywords().stream()
-                    .allMatch(keyword -> keyword.getKeyword().length() <= 50));
+            assertNull(stored.getTotalScore());
+            assertNull(stored.getRiskLevel());
+            assertNull(stored.getCategory());
+            assertNull(stored.getAnalyzedAt());
+            assertTrue(stored.getIndicators().isEmpty());
+            assertTrue(stored.getUrlRisks().isEmpty());
+            assertTrue(stored.getKeywords().isEmpty());
+
+            assertEquals(1, outboxEventRepository.count());
+            OutboxEvent outboxEvent = outboxEventRepository.findAll().get(0);
+            assertEquals(OutboxStatus.PENDING, outboxEvent.getStatus());
+            assertEquals(stored.getId(), outboxEvent.getAggregateId());
+            assertFalse(outboxEvent.getEncryptedPayload().contains(DANGEROUS_CONTENT));
         });
     }
 
@@ -111,7 +130,7 @@ class AnalysisCreationFlowTest {
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody("sms-duplicate", DANGEROUS_CONTENT)))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
                 .andReturn();
 
         String firstId = com.jayway.jsonpath.JsonPath.read(
@@ -123,7 +142,7 @@ class AnalysisCreationFlowTest {
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody("sms-duplicate", "완전히 다른 두 번째 문자")))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
                 .andReturn();
         String secondId = com.jayway.jsonpath.JsonPath.read(
                 second.getResponse().getContentAsString(),
@@ -132,6 +151,7 @@ class AnalysisCreationFlowTest {
 
         assertEquals(firstId, secondId);
         assertEquals(1, analysisRepository.count());
+        assertEquals(1, outboxEventRepository.count());
     }
 
     @Test

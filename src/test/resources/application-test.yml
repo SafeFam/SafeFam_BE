@@ -24,3 +24,10 @@ solapi:
 
 firebase:
   service-account-path: test
+
+safefam:
+  messaging:
+    analysis:
+      publisher-enabled: false
+    outbox:
+      encryption-key: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=

@@ -30,8 +30,11 @@ class JwtUtilTest {
     void tamperedTokenIsRejected() {
         JwtUtil jwtUtil = new JwtUtil(SECRET, 60_000, 120_000);
         String token = jwtUtil.generateAccessToken(1L, UserRole.USER);
-        String tampered = token.substring(0, token.length() - 1)
-                + (token.endsWith("a") ? "b" : "a");
+        String[] parts = token.split("\\.");
+        String signature = parts[2];
+        String tamperedSignature = (signature.startsWith("a") ? "b" : "a")
+                + signature.substring(1);
+        String tampered = parts[0] + "." + parts[1] + "." + tamperedSignature;
 
         assertFalse(jwtUtil.validateToken(tampered));
     }
