@@ -65,9 +65,21 @@ safefam:
   messaging:
     analysis:
       exchange: safefam.analysis
+
       request-queue: safefam.analysis.requested.q
       request-routing-key: analysis.requested.v1
+
+      result-queue: safefam.analysis.result.q
+      completed-routing-key: analysis.completed.v1
+      partial-routing-key: analysis.partial.v1
+      failed-routing-key: analysis.failed.v1
+
+      result-dlq: safefam.analysis.result.dlq
+      result-dlq-routing-key: analysis.result.dead.v1
+      result-max-deliveries: 2
+
       publisher-enabled: ${ANALYSIS_PUBLISHER_ENABLED:true}
+      consumer-enabled: ${ANALYSIS_CONSUMER_ENABLED:true}
       publisher-delay: ${ANALYSIS_PUBLISHER_DELAY:1000}
     outbox:
       encryption-key: ${OUTBOX_ENCRYPTION_KEY_BASE64}

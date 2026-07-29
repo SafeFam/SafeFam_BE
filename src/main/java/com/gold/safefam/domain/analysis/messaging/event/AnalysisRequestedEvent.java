@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/* 분석 요청 이벤트 */
 public record AnalysisRequestedEvent(
         String schemaVersion,
         UUID eventId,
@@ -15,7 +16,7 @@ public record AnalysisRequestedEvent(
         Instant occurredAt,
         Payload payload
 ) {
-
+    // 분석에 필요한 실제 데이터 객체
     public record Payload(
             String sender,
             String content,

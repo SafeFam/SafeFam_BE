@@ -47,4 +47,5 @@ volumes:
 
 networks:
   safefam-network:
+    name: safefam-network
     driver: bridge

@@ -14,8 +14,31 @@ public record RabbitMqProperties (
     @DefaultValue("analysis.requested.v1")
     String requestRoutingKey,
 
+    @DefaultValue("safefam.analysis.result.q")
+    String resultQueue,
+
+    @DefaultValue("analysis.completed.v1")
+    String completedRoutingKey,
+
+    @DefaultValue("analysis.partial.v1")
+    String partialRoutingKey,
+
+    @DefaultValue("analysis.failed.v1")
+    String failedRoutingKey,
+
+    @DefaultValue("safefam.analysis.result.dlq")
+    String resultDlq,
+
+    @DefaultValue("analysis.result.dead.v1")
+    String resultDlqRoutingKey,
+
+    @DefaultValue("2")
+    int resultMaxDeliveries,
+
     @DefaultValue("true")
-    boolean publisherEnabled
+    boolean publisherEnabled,
+
+    boolean consumerEnabled
 ) {
 
 }
