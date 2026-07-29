@@ -8,6 +8,8 @@ import com.gold.safefam.domain.analysis.enums.IndicatorType;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.messaging.event.AnalysisResultEvent;
 import com.gold.safefam.domain.analysis.repository.AnalysisRepository;
+import com.gold.safefam.domain.analysis.event.AnalysisResultCommittedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import com.gold.safefam.infrastructure.messaging.idempotency.ProcessedAnalysisEventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +25,18 @@ public class AnalysisResultApplyService {
     private final AnalysisRepository analysisRepository;
     private final ProcessedAnalysisEventRepository processedEventRepository;
     private final AnalysisResultValidator validator;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AnalysisResultApplyService(
             AnalysisRepository analysisRepository,
             ProcessedAnalysisEventRepository processedEventRepository,
-            AnalysisResultValidator validator
+            AnalysisResultValidator validator,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.analysisRepository = analysisRepository;
         this.processedEventRepository = processedEventRepository;
         this.validator = validator;
+        this.eventPublisher = eventPublisher;
     }
 
     /* 분석 결과 이벤트 적용 */
@@ -81,6 +86,10 @@ public class AnalysisResultApplyService {
             case ANALYSIS_FAILED ->
                     applyFailedResult(analysis, event);
         }
+
+        eventPublisher.publishEvent(
+                AnalysisResultCommittedEvent.from(analysis)
+        );
 
         return ApplyResult.APPLIED;
     }

@@ -7,7 +7,6 @@ import com.gold.safefam.domain.notification.repository.DeviceRepository;
 import com.gold.safefam.domain.notification.service.FcmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +21,6 @@ public class FamilyNotificationService {
     private final DeviceRepository deviceRepository;
     private final FcmService fcmService;
 
-    @Async
     @Transactional(readOnly = true)
     public void mirrorHighRiskToGuardians(Long wardId, String explanation, Long analysisId) {
         List<FamilyLink> links = familyLinkRepository.findActiveByWardId(wardId);
