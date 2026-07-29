@@ -14,7 +14,7 @@ public record AnalysisResponse(
         Long analysisId,
 
         @Schema(minimum = "0", maximum = "100", example = "92")
-        int riskScore,
+        Integer riskScore,
 
         @Schema(example = "HIGH")
         RiskLevel riskLevel,
@@ -37,9 +37,9 @@ public record AnalysisResponse(
 ) {
     @Schema(description = "탐지 계층별 점수. 현재 규칙 기반 구현에서는 llmScore가 0입니다.")
     public record ScoreBreakdown(
-            @Schema(example = "0") int llmScore,
-            @Schema(example = "100") int urlScore,
-            @Schema(example = "85") int patternScore
+            @Schema(example = "0") Integer llmScore,
+            @Schema(example = "100") Integer urlScore,
+            @Schema(example = "85") Integer patternScore
     ) {
     }
 

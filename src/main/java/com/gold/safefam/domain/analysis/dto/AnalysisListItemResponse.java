@@ -18,7 +18,7 @@ public record AnalysisListItemResponse(
         String messagePreview,
 
         @Schema(example = "92")
-        int riskScore,
+        Integer riskScore,
 
         RiskLevel riskLevel,
 

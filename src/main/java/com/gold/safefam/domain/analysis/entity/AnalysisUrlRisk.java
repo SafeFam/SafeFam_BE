@@ -37,10 +37,43 @@ public class AnalysisUrlRisk {
     @Column(nullable = false)
     private boolean suspicious;
 
-    public AnalysisUrlRisk(String originalUrl, boolean shortened, boolean suspicious) {
+    @Column(name = "traced_url", length = 500)
+    private String tracedUrl;
+
+    @Column
+    private Boolean malicious;
+
+    @Column(name = "risk_score")
+    private Integer riskScore;
+
+    @Column(name = "engine_source", length = 100)
+    private String engineSource;
+
+    @Column(name = "error_code", length = 200)
+    private String errorCode;
+
+    public AnalysisUrlRisk(
+            String originalUrl,
+            boolean shortened,
+            boolean suspicious,
+            String tracedUrl,
+            Boolean malicious,
+            Integer riskScore,
+            String engineSource,
+            String errorCode) {
         this.originalUrl = originalUrl;
-        this.shortened = shortened;
-        this.suspicious = suspicious;
+        this.tracedUrl = tracedUrl;
+        this.malicious = malicious;
+        this.riskScore = riskScore;
+        this.engineSource = engineSource;
+        this.errorCode = errorCode;
+
+        this.shortened = originalUrl != null
+                && tracedUrl != null
+                && !originalUrl.equals(tracedUrl);
+
+        this.suspicious = Boolean.TRUE.equals(malicious);
+
     }
 
     void attachTo(Analysis analysis) {

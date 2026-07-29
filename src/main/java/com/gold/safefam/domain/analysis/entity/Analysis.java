@@ -89,6 +89,18 @@ public class Analysis {
     @Column(name = "detected_at")
     private OffsetDateTime analyzedAt;
 
+    @Column(name = "raw_text_score")
+    private Integer rawTextScore;
+
+    @Column(name = "raw_url_score")
+    private Integer rawUrlScore;
+
+    @Column(name = "raw_rules_score")
+    private Integer rawRulesScore;
+
+    @Column(name = "failure_code", length = 100)
+    private String failureCode;
+
     @OneToMany(mappedBy = "analysis", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
     private final List<AnalysisIndicator> indicators = new ArrayList<>();
@@ -183,5 +195,75 @@ public class Analysis {
     public void addKeyword(AnalysisKeyword keyword) {
         keyword.attachTo(this);
         keywords.add(keyword);
+    }
+
+    /* 결과 반영 메서드 */
+    public void complete(
+            AnalysisStatus resultStatus,
+            Integer rawTextScore,
+            Integer rawUrlScore,
+            Integer rawRulesScore,
+            Integer weightedTextScore,
+            Integer weightedUrlScore,
+            Integer weightedRulesScore,
+            int finalScore,
+            RiskLevel riskLevel,
+            PhishingCategory category,
+            String explanation,
+            OffsetDateTime analyzedAt
+    ) {
+        if (resultStatus != AnalysisStatus.COMPLETED
+                && resultStatus != AnalysisStatus.PARTIAL_SUCCESS) {
+            throw new IllegalArgumentException(
+                    "Unsupported successful analysis status"
+            );
+        }
+
+        this.status = resultStatus;
+
+        this.rawTextScore = rawTextScore;
+        this.rawUrlScore = rawUrlScore;
+        this.rawRulesScore = rawRulesScore;
+
+        this.llmScore = weightedTextScore;
+        this.urlScore = weightedUrlScore;
+        this.patternScore = weightedRulesScore;
+        this.totalScore = finalScore;
+
+        this.riskLevel = riskLevel;
+        this.category = category;
+        this.explanation = explanation;
+        this.failureCode = null;
+        this.analyzedAt = analyzedAt;
+    }
+
+    /* 실패 메서드 */
+    public void fail(
+            String failureCode,
+            OffsetDateTime analyzedAt
+    ) {
+        this.status = AnalysisStatus.FAILED;
+
+        this.rawTextScore = null;
+        this.rawUrlScore = null;
+        this.rawRulesScore = null;
+
+        this.llmScore = null;
+        this.urlScore = null;
+        this.patternScore = null;
+        this.totalScore = null;
+
+        // 실패를 LOW로 저장 X
+        this.riskLevel = null;
+
+        this.failureCode = failureCode;
+        this.analyzedAt = analyzedAt;
+    }
+
+    /* 하위 컬렉션 초기화 메서드 */
+    public void clearResultDetails() {
+        indicators.clear();
+        urlRisks.clear();
+        keywords.clear();
     }
 }
