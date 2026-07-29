@@ -66,6 +66,7 @@ public class AnalysisResultApplyService {
                 ));
 
         validateClientMessageId(analysis, event);
+        validateResultCanBeApplied(analysis);
 
         // 상태별 도메인 엔티티 상태 엄데이트
         switch (event.eventType()) {
@@ -85,6 +86,11 @@ public class AnalysisResultApplyService {
 
             case ANALYSIS_FAILED ->
                     applyFailedResult(analysis, event);
+
+            default -> throw new AnalysisResultValidator
+                    .InvalidAnalysisResultEventException(
+                    "Unsupported eventType: " + event.eventType()
+            );
         }
 
         eventPublisher.publishEvent(
@@ -92,6 +98,17 @@ public class AnalysisResultApplyService {
         );
 
         return ApplyResult.APPLIED;
+    }
+
+    private void validateResultCanBeApplied(Analysis analysis) {
+        if (analysis.getStatus() != AnalysisStatus.PENDING
+                && analysis.getStatus() != AnalysisStatus.PROCESSING) {
+            throw new AnalysisResultValidator
+                    .InvalidAnalysisResultEventException(
+                    "Analysis result cannot be applied from status: "
+                            + analysis.getStatus()
+            );
+        }
     }
 
     /* 성공 / 부분 성공 결과 엔티티 반영 */

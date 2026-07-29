@@ -23,6 +23,9 @@ public class AnalysisResultValidator {
             case ANALYSIS_COMPLETED -> validateCompleted(event.payload());
             case ANALYSIS_PARTIAL -> validatePartial(event.payload());
             case ANALYSIS_FAILED -> validateFailed(event.payload());
+            default -> throw new InvalidAnalysisResultEventException(
+                    "Unsupported eventType: " + event.eventType()
+            );
         }
     }
 

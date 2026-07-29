@@ -4,13 +4,12 @@ import com.gold.safefam.domain.analysis.enums.AnalysisStatus;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
 import com.gold.safefam.domain.analysis.event.AnalysisResultCommittedEvent;
 import com.gold.safefam.domain.family.service.FamilyNotificationService;
-import com.gold.safefam.domain.notification.entity.Device;
-import com.gold.safefam.domain.notification.repository.DeviceRepository;
 import com.gold.safefam.domain.notification.service.FcmService;
+import com.gold.safefam.domain.notification.service.NotificationRecipientReader;
+import com.gold.safefam.domain.notification.service.NotificationRecipientReader.Recipient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,23 +21,22 @@ public class AnalysisNotificationService {
                     AnalysisNotificationService.class
             );
 
-    private final DeviceRepository deviceRepository;
+    private final NotificationRecipientReader recipientReader;
     private final FcmService fcmService;
     private final FamilyNotificationService familyNotificationService;
 
     public AnalysisNotificationService(
-            DeviceRepository deviceRepository,
+            NotificationRecipientReader recipientReader,
             FcmService fcmService,
             FamilyNotificationService familyNotificationService
     ) {
-        this.deviceRepository = deviceRepository;
+        this.recipientReader = recipientReader;
         this.fcmService = fcmService;
         this.familyNotificationService =
                 familyNotificationService;
     }
 
     /* 분석 결과 기반 종합 알림 전송 */
-    @Transactional(readOnly = true)
     public void notifyResult(
             AnalysisResultCommittedEvent event
     ) {
@@ -56,10 +54,10 @@ public class AnalysisNotificationService {
     private void notifyOwner(
             AnalysisResultCommittedEvent event
     ) {
-        List<Device> devices =
-                deviceRepository.findByUserId(event.userId());
+        List<Recipient> recipients =
+                recipientReader.findOwnerDevices(event.userId());
 
-        if (devices.isEmpty()) {
+        if (recipients.isEmpty()) {
             log.debug(
                     "No registered device for analysis notification. "
                             + "userId={}, analysisId={}",
@@ -73,10 +71,10 @@ public class AnalysisNotificationService {
                 createMessage(event);
 
         // 등록된 개별 기기별로 FCM 발송 시도
-        for (Device device : devices) {
+        for (Recipient recipient : recipients) {
             try {
                 fcmService.sendNotification(
-                        device.getFcmToken(),
+                        recipient.fcmToken(),
                         message.title(),
                         message.body(),
                         event.analysisId()
@@ -89,7 +87,7 @@ public class AnalysisNotificationService {
                                 + "userId={}, analysisId={}, deviceId={}",
                         event.userId(),
                         event.analysisId(),
-                        device.getId(),
+                        recipient.deviceId(),
                         exception
                 );
             }

@@ -41,7 +41,9 @@ public class AnalysisResponseMapper {
                 analysis.getUrlRisks().stream()
                         .map(url -> new UrlThreat(
                                 url.getOriginalUrl(),
-                                url.getTracedUrl(),
+                                url.getTracedUrl() != null
+                                        ? url.getTracedUrl()
+                                        : url.getOriginalUrl(),
                                 url.isSuspicious()
                         ))
                         .toList();

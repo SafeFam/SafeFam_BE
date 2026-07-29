@@ -14,7 +14,9 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 
 @Component
 public class AnalysisResultConsumer {
@@ -55,13 +57,14 @@ public class AnalysisResultConsumer {
                     AnalysisResultEvent.class
             );
         } catch (JacksonException exception) {
-            log.warn(
-                    "Rejecting malformed analysis result message. "
-                            + "deliveryTag={}, body={}",
-                    deliveryTag,
-                    safeBody(message),
-                    exception
-            );
+            byte[] payload = message.getBody();
+
+            log.atWarn()
+                    .setCause(exception)
+                    .addKeyValue("deliveryTag", deliveryTag)
+                    .addKeyValue("payloadLength", payload.length)
+                    .addKeyValue("payloadSha256", sha256(payload))
+                    .log("Rejecting malformed analysis result message");
 
             channel.basicReject(deliveryTag, false);
             return;
@@ -130,16 +133,18 @@ public class AnalysisResultConsumer {
         }
     }
 
-    private String safeBody(Message message) {
-        String body = new String(
-                message.getBody(),
-                StandardCharsets.UTF_8
-        );
-
-        if (body.length() <= 500) {
-            return body;
+    private String sha256(byte[] payload) {
+        try {
+            MessageDigest digest =
+                    MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(
+                    digest.digest(payload)
+            );
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(
+                    "SHA-256 algorithm is unavailable",
+                    exception
+            );
         }
-
-        return body.substring(0, 500) + "...";
     }
 }
