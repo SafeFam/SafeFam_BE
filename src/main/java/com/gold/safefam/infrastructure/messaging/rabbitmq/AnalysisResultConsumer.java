@@ -1,7 +1,5 @@
 package com.gold.safefam.infrastructure.messaging.rabbitmq;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gold.safefam.domain.analysis.messaging.event.AnalysisResultEvent;
 import com.gold.safefam.domain.analysis.service.AnalysisResultApplyService;
 import com.gold.safefam.domain.analysis.service.AnalysisResultValidator;
@@ -12,6 +10,8 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +35,7 @@ public class AnalysisResultConsumer {
 
     /* 분석 결과 메시지 수신 및 처리 리스너 */
     @RabbitListener(
-            queues = "${safefam.messaging.analysis.result-queue}",
+            queues = "${safefam.messaging.analysis.result-queue:safefam.analysis.result.q}",
             containerFactory = "analysisResultListenerContainerFactory",
             autoStartup = "${safefam.messaging.analysis.consumer-enabled:true}"
     )
@@ -54,7 +54,7 @@ public class AnalysisResultConsumer {
                     message.getBody(),
                     AnalysisResultEvent.class
             );
-        } catch (JsonProcessingException exception) {
+        } catch (JacksonException exception) {
             log.warn(
                     "Rejecting malformed analysis result message. "
                             + "deliveryTag={}, body={}",

@@ -6,6 +6,7 @@ import com.gold.safefam.domain.analysis.dto.AnalysisResponse.Indicator;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.RecommendedAction;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.ScoreBreakdown;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.UrlThreat;
+import com.gold.safefam.domain.analysis.enums.AnalysisStatus;
 import com.gold.safefam.domain.analysis.entity.Analysis;
 import com.gold.safefam.domain.analysis.model.MessageRiskAnalysisResult;
 import com.gold.safefam.domain.analysis.service.AnalysisResultFactory;
@@ -28,28 +29,43 @@ public class AnalysisResponseMapper {
 
     /** DB에서 읽은 분석 Aggregate 전체를 AnalysisResponse 한 건으로 변환한다. */
     public AnalysisResponse toResponse(Analysis analysis) {
-        List<Indicator> indicators = analysis.getIndicators().stream()
-                .map(indicator -> new Indicator(indicator.getType(), indicator.getDescription()))
-                .toList();
-        List<UrlThreat> urls = analysis.getUrlRisks().stream()
-                .map(url -> new UrlThreat(
-                        url.getOriginalUrl(),
-                        url.getOriginalUrl(),
-                        url.isSuspicious()
-                ))
-                .toList();
-        List<RecommendedAction> actions = resultFactory
-                .recommendedActionsFor(analysis.getRiskLevel(), analysis.getCategory())
-                .stream()
-                .map(this::toRecommendedAction)
-                .toList();
+        List<Indicator> indicators =
+                analysis.getIndicators().stream()
+                        .map(indicator -> new Indicator(
+                                indicator.getType(),
+                                indicator.getDescription()
+                        ))
+                        .toList();
+
+        List<UrlThreat> urls =
+                analysis.getUrlRisks().stream()
+                        .map(url -> new UrlThreat(
+                                url.getOriginalUrl(),
+                                url.getTracedUrl(),
+                                url.isSuspicious()
+                        ))
+                        .toList();
+
+        List<RecommendedAction> actions =
+                hasSuccessfulResult(analysis.getStatus())
+                        ? resultFactory
+                        .recommendedActionsFor(
+                                analysis.getRiskLevel(),
+                                analysis.getCategory()
+                        )
+                        .stream()
+                        .map(this::toRecommendedAction)
+                        .toList()
+                        : List.of();
 
         return new AnalysisResponse(
                 analysis.getId(),
+                analysis.getStatus(),
                 analysis.getTotalScore(),
                 analysis.getRiskLevel(),
                 analysis.getCategory(),
                 analysis.getExplanation(),
+                analysis.getFailureCode(),
                 new ScoreBreakdown(
                         analysis.getLlmScore(),
                         analysis.getUrlScore(),
@@ -66,6 +82,7 @@ public class AnalysisResponseMapper {
     public AnalysisListItemResponse toListItemResponse(Analysis analysis) {
         return new AnalysisListItemResponse(
                 analysis.getId(),
+                analysis.getStatus(),
                 maskSender(analysis.getSender()),
                 analysis.getContentPreview(),
                 analysis.getTotalScore(),
@@ -99,5 +116,12 @@ public class AnalysisResponseMapper {
             return digits.substring(0, 4) + "****";
         }
         return sender;
+    }
+
+    private boolean hasSuccessfulResult(
+            AnalysisStatus status
+    ) {
+        return status == AnalysisStatus.COMPLETED
+                || status == AnalysisStatus.PARTIAL_SUCCESS;
     }
 }

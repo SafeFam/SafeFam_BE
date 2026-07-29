@@ -52,13 +52,38 @@ public class AnalysisUrlRisk {
     @Column(name = "error_code", length = 200)
     private String errorCode;
 
+    /**
+     * 기존 Spring 규칙 기반 URL 분석 결과를 저장한다.
+     *
+     * 기존 분석기는 최종 추적 URL과 외부 엔진 상세 정보를 제공하지 않으므로
+     * 해당 값은 null로 유지하고, 자체 계산한 shortened/suspicious 값을 보존한다.
+     */
+    public AnalysisUrlRisk(
+            String originalUrl,
+            boolean shortened,
+            boolean suspicious
+    ) {
+        this.originalUrl = originalUrl;
+        this.shortened = shortened;
+        this.suspicious = suspicious;
+        this.tracedUrl = null;
+        this.malicious = suspicious;
+        this.riskScore = null;
+        this.engineSource = null;
+        this.errorCode = null;
+    }
+
+    /**
+     * FastAPI가 전달한 URL 분석 결과를 저장한다.
+     */
     public AnalysisUrlRisk(
             String originalUrl,
             String tracedUrl,
             Boolean malicious,
             Integer riskScore,
             String engineSource,
-            String errorCode) {
+            String errorCode
+    ) {
         this.originalUrl = originalUrl;
         this.tracedUrl = tracedUrl;
         this.malicious = malicious;

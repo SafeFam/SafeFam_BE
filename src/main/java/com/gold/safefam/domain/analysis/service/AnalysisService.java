@@ -184,7 +184,7 @@ public class AnalysisService {
         PageRequest pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by(Sort.Order.desc("analyzedAt"), Sort.Order.desc("id"))
+                Sort.by(Sort.Order.desc("receivedAt"), Sort.Order.desc("id"))
         );
 
         Page<Analysis> result = analysisRepository.search(

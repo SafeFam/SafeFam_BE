@@ -34,8 +34,8 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
         WHERE analysis.userId = :userId
           AND (:riskLevel IS NULL OR analysis.riskLevel = :riskLevel)
           AND (:category IS NULL OR analysis.category = :category)
-          AND analysis.analyzedAt >= :fromAt
-          AND analysis.analyzedAt < :toExclusive
+          AND analysis.receivedAt >= :fromAt
+          AND analysis.receivedAt < :toExclusive
         """)
     Page<Analysis> search(
             @Param("userId") Long userId,

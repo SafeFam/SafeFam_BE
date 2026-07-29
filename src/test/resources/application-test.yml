@@ -29,5 +29,6 @@ safefam:
   messaging:
     analysis:
       publisher-enabled: false
+      consumer-enabled: false
     outbox:
       encryption-key: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=

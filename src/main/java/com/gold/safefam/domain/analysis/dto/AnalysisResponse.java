@@ -3,6 +3,7 @@ package com.gold.safefam.domain.analysis.dto;
 import com.gold.safefam.domain.analysis.enums.IndicatorType;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
+import com.gold.safefam.domain.analysis.enums.AnalysisStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.OffsetDateTime;
@@ -12,6 +13,12 @@ import java.util.List;
 public record AnalysisResponse(
         @Schema(example = "101")
         Long analysisId,
+
+        @Schema(
+                description = "분석 처리 상태",
+                example = "COMPLETED"
+        )
+        AnalysisStatus status,
 
         @Schema(minimum = "0", maximum = "100", example = "92")
         Integer riskScore,
@@ -24,6 +31,13 @@ public record AnalysisResponse(
 
         @Schema(example = "금융기관을 사칭하며 외부 링크 접속과 본인 인증을 유도합니다.")
         String explanation,
+
+        @Schema(
+                description = "전체 분석 실패 코드",
+                example = "PIPELINE_ERROR",
+                nullable = true
+        )
+        String failureCode,
 
         ScoreBreakdown scoreBreakdown,
 
