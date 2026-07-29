@@ -1,7 +1,8 @@
-package com.gold.safefam.infrastructure.messaging.rabbitmq;
+package com.gold.safefam.infrastructure.messaging.rabbitmq.publisher;
 
 import com.gold.safefam.infrastructure.messaging.outbox.model.ClaimedOutboxEvent;
 import com.gold.safefam.infrastructure.messaging.outbox.service.OutboxPayloadCipher;
+import com.gold.safefam.infrastructure.messaging.rabbitmq.config.RabbitMqProperties;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageDeliveryMode;

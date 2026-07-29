@@ -1,4 +1,4 @@
-package com.gold.safefam.infrastructure.messaging.rabbitmq;
+package com.gold.safefam.infrastructure.messaging.rabbitmq.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;

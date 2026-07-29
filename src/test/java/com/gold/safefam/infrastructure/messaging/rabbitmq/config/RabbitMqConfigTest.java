@@ -1,4 +1,4 @@
-package com.gold.safefam.infrastructure.messaging.rabbitmq;
+package com.gold.safefam.infrastructure.messaging.rabbitmq.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Binding;

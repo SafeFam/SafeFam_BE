@@ -1,4 +1,4 @@
-package com.gold.safefam.infrastructure.messaging.rabbitmq;
+package com.gold.safefam.infrastructure.messaging.rabbitmq.consumer;
 
 import com.gold.safefam.domain.analysis.messaging.event.AnalysisResultEvent;
 import com.gold.safefam.domain.analysis.service.AnalysisResultApplyService;
