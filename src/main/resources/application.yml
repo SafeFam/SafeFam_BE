@@ -77,9 +77,11 @@ safefam:
       result-dlq: safefam.analysis.result.dlq
       result-dlq-routing-key: analysis.result.dead.v1
       result-max-deliveries: 2
+      result-prefetch: 10
 
       publisher-enabled: ${ANALYSIS_PUBLISHER_ENABLED:true}
       consumer-enabled: ${ANALYSIS_CONSUMER_ENABLED:true}
+
       publisher-delay: ${ANALYSIS_PUBLISHER_DELAY:1000}
     outbox:
       encryption-key: ${OUTBOX_ENCRYPTION_KEY_BASE64}

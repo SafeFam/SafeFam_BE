@@ -35,9 +35,13 @@ public record RabbitMqProperties (
     @DefaultValue("2")
     int resultMaxDeliveries,
 
+    @DefaultValue("10")
+    int resultPrefetch,
+
     @DefaultValue("true")
     boolean publisherEnabled,
 
+    @DefaultValue("true")
     boolean consumerEnabled
 ) {
 

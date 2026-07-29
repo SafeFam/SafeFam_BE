@@ -72,6 +72,32 @@ public class RabbitMqConfig {
                 .with(properties.completedRoutingKey());
     }
 
+    // 분석 부분 완료 결과 큐 바인딩
+    @Bean
+    Binding partialResultBinding(
+            Queue analysisResultQueue,
+            TopicExchange analysisExchange,
+            RabbitMqProperties properties
+    ) {
+        return BindingBuilder
+                .bind(analysisResultQueue)
+                .to(analysisExchange)
+                .with(properties.partialRoutingKey());
+    }
+
+    // 분석 실패 결과 큐 바인딩
+    @Bean
+    Binding failedResultBinding(
+            Queue analysisResultQueue,
+            TopicExchange analysisExchange,
+            RabbitMqProperties properties
+    ) {
+        return BindingBuilder
+                .bind(analysisResultQueue)
+                .to(analysisExchange)
+                .with(properties.failedRoutingKey());
+    }
+
     // DLQ 생성
     @Bean
     Queue analysisResultDlq(
