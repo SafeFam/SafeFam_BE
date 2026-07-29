@@ -54,8 +54,6 @@ public class AnalysisUrlRisk {
 
     public AnalysisUrlRisk(
             String originalUrl,
-            boolean shortened,
-            boolean suspicious,
             String tracedUrl,
             Boolean malicious,
             Integer riskScore,

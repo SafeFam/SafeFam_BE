@@ -1,5 +1,4 @@
 package com.gold.safefam.domain.analysis.messaging.event;
-
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
 import com.gold.safefam.domain.analysis.service.UrlRiskAnalyzer;
 
@@ -7,7 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/* 분석 완료 / 결과 이벤트 */
+/* 분석 완료 및 결과 이벤트 */
 public record AnalysisResultEvent(
         String schemaVersion,
         UUID eventId,
@@ -28,7 +27,7 @@ public record AnalysisResultEvent(
             RawScores rawScores,
             WeightedContributions weightedContributions,
             TextAnalysis textAnalysis,
-            UrlRiskAnalyzer.UrlAnalysis urlAnalysis,
+            UrlAnalysis urlAnalysis,
             RuleAnalysis ruleAnalysis,
             List<String> failedTracks,
             String failureCode
@@ -58,6 +57,18 @@ public record AnalysisResultEvent(
                 List<String> evidence,
                 List<String> failedEngines
         ) {
+        }
+
+        // URL 검사 상세 분석 정보
+        public record UrlAnalysis(
+                boolean hasUrl,
+                String originalUrl,
+                String tracedUrl,
+                Boolean malicious,
+                Integer score,
+                String engineSource,
+                String errorCode
+        ){
         }
         
         // 룰 기반 1차 패턴 탐지 정보
