@@ -17,6 +17,10 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+tasks.named('jar') {
+    enabled = false
+}
+
 repositories {
     mavenCentral()
 }

@@ -3,9 +3,11 @@ package com.gold.safefam.domain.analysis.repository;
 import com.gold.safefam.domain.analysis.entity.Analysis;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,8 +34,8 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
         WHERE analysis.userId = :userId
           AND (:riskLevel IS NULL OR analysis.riskLevel = :riskLevel)
           AND (:category IS NULL OR analysis.category = :category)
-          AND analysis.analyzedAt >= :fromAt
-          AND analysis.analyzedAt < :toExclusive
+          AND analysis.receivedAt >= :fromAt
+          AND analysis.receivedAt < :toExclusive
         """)
     Page<Analysis> search(
             @Param("userId") Long userId,
@@ -139,6 +141,17 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
             @Param("toExclusive") OffsetDateTime toExclusive,
             @Param("riskLevels") List<RiskLevel> riskLevels,
             Pageable pageable
+    );
+
+    /* 같은 분석에 COMPLETED와 PARTIAL이 동시에 들어와도 순차적으로 처리한다. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    SELECT analysis
+    FROM Analysis analysis
+    WHERE analysis.id = :analysisId
+    """)
+    Optional<Analysis> findByIdForUpdate(
+            @Param("analysisId") Long analysisId
     );
 
     /** 위험 등급별 집계 결과를 받는 조회 전용 프로젝션이다. */

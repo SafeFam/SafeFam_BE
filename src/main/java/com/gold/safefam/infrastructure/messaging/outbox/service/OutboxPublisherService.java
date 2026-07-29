@@ -1,7 +1,7 @@
 package com.gold.safefam.infrastructure.messaging.outbox.service;
 
 import com.gold.safefam.infrastructure.messaging.outbox.model.ClaimedOutboxEvent;
-import com.gold.safefam.infrastructure.messaging.rabbitmq.AnalysisRequestEventPublisher;
+import com.gold.safefam.infrastructure.messaging.rabbitmq.publisher.AnalysisRequestEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
