@@ -5,6 +5,7 @@ import com.gold.safefam.domain.analysis.dto.AnalysisRequest;
 import com.gold.safefam.domain.analysis.entity.Analysis;
 import com.gold.safefam.domain.analysis.messaging.event.AnalysisRequestedEvent;
 import com.gold.safefam.domain.analysis.privacy.MessageContentProtector.ProtectedContent;
+import com.gold.safefam.domain.analysis.privacy.PiiMaskingService;
 import com.gold.safefam.domain.analysis.repository.AnalysisRepository;
 import com.gold.safefam.infrastructure.messaging.outbox.model.OutboxEvent;
 import com.gold.safefam.infrastructure.messaging.outbox.repository.OutboxEventRepository;
@@ -27,17 +28,20 @@ public class AnalysisRequestWriter {
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxPayloadCipher payloadCipher;
     private final ObjectMapper objectMapper;
+    private final PiiMaskingService piiMaskingService;
 
     public AnalysisRequestWriter(
             AnalysisRepository analysisRepository,
             OutboxEventRepository outboxEventRepository,
             OutboxPayloadCipher payloadCipher,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            PiiMaskingService piiMaskingService
     ) {
         this.analysisRepository = analysisRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.payloadCipher = payloadCipher;
         this.objectMapper = objectMapper;
+        this.piiMaskingService = piiMaskingService;
     }
 
     @Transactional
@@ -75,7 +79,7 @@ public class AnalysisRequestWriter {
                         occurredAt,
                         new AnalysisRequestedEvent.Payload(
                                 request.sender(),
-                                request.content(),
+                                piiMaskingService.mask(request.content()),
                                 request.receivedAt(),
                                 request.source()
                         )
