@@ -14,9 +14,9 @@ import java.util.regex.Pattern;
 @Component
 public class PiiMaskingService {
 
-    // URL: http(s):// 또는 www. 로 시작하는 토큰 (마스킹 제외 대상)
+    // URL: http(s):// 또는 www. 로 시작하는 토큰 (마스킹 제외 대상, 이메일 도메인의 www는 제외)
     private static final Pattern URL_PATTERN = Pattern.compile(
-            "(?i)(?:https?://|www\\.)[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+;=%]+"
+            "(?i)(?<!@)(?:https?://|www\\.)[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+;=%]+"
     );
 
     // 주민번호: 6자리-7자리 (하이픈/공백 구분자 필수, 연속 13자리는 제외)

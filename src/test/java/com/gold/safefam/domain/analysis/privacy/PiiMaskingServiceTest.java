@@ -116,6 +116,14 @@ class PiiMaskingServiceTest {
                 .doesNotContain("010-1234-5678");
     }
 
+    @Test
+    @DisplayName("이메일 도메인의 www가 URL로 잘못 마스킹되지 않는다")
+    void maskEmail_withWwwDomain() {
+        assertThat(piiMaskingService.mask("alice@www.example.com으로 연락하세요"))
+                .contains("[EMAIL]")
+                .doesNotContain("alice@www.example.com");
+    }
+
     // ── 복합 케이스 ──────────────────────────────────────────────
 
     @Test
