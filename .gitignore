@@ -50,3 +50,5 @@ secrets/
 **/service-account*.json
 *.pem
 *.key
+# Firebase service-account credentials
+*-firebase-adminsdk-*.json
