@@ -28,7 +28,7 @@ import java.util.Map;
  * 토큰 반환
  */
 
-@Tag(name = "1. 인증", description = "회원가입, 로그인 및 JWT 관리")
+@Tag(name = "01. 인증", description = "회원가입, 로그인 및 JWT 관리")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/auth")

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "8. 가족", description = "가족 보호 모드 API")
+@Tag(name = "08. 가족", description = "가족 보호 모드 API")
 @RestController
 @RequestMapping("/api/v1/family")
 @RequiredArgsConstructor

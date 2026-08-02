@@ -161,6 +161,7 @@ SafeFam API의 기본 경로는 다음과 같습니다.
 | 인증 | `/api/v1/auth` |
 | 사용자 | `/api/v1/users/me` |
 | 문자 분석·탐지 이력 | `/api/v1/analyses` |
+| 분석 결과 기반 챗봇 | `/api/v1/chat` |
 | 통계 | `/api/v1/statistics` |
 | 푸시 알림 기기 | `/api/v1/devices` |
 

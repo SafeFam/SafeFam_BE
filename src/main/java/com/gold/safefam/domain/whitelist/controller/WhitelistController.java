@@ -32,7 +32,7 @@ import java.util.List;
  * 인증 사용자의 신뢰 발신자를 관리하는 HTTP 진입점이다.
  * 등록·목록·삭제와 문자 분석 호출 전 프리패스 여부 확인 API를 제공한다.
  */
-@Tag(name = "6. 화이트리스트", description = "신뢰 발신자 관리 및 분석 프리패스 확인")
+@Tag(name = "06. 화이트리스트", description = "신뢰 발신자 관리 및 분석 프리패스 확인")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
 @Validated
 @RequiredArgsConstructor

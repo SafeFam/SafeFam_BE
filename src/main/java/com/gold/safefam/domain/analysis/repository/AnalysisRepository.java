@@ -4,6 +4,7 @@ import com.gold.safefam.domain.analysis.entity.Analysis;
 import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,6 +27,14 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
 
     /** 상세·삭제·피드백 처리 전에 분석 이력의 소유권을 함께 확인한다. */
     Optional<Analysis> findByIdAndUserId(Long id, Long userId);
+
+    /** 챗봇 컨텍스트 생성 시 필요한 탐지 근거를 한 번에 조회한다. */
+    @EntityGraph(attributePaths = "indicators")
+    @Query("SELECT analysis FROM Analysis analysis WHERE analysis.id = :id AND analysis.userId = :userId")
+    Optional<Analysis> findWithIndicatorsByIdAndUserId(
+            @Param("id") Long id,
+            @Param("userId") Long userId
+    );
 
     /** 사용자 소유 이력을 위험 등급·피싱 유형·날짜 범위로 필터링한다. */
     @Query("""

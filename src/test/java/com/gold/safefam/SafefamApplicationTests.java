@@ -25,7 +25,7 @@ class SafefamApplicationTests {
     void contextLoads() {
     }
 
-    /** 기존 API와 신규 화이트리스트·신고·트렌드 경로가 OpenAPI에 포함되는지 확인한다. */
+    /** 핵심 API 경로가 OpenAPI 문서에 포함되는지 확인한다. */
     @Test
     void openApiDocumentContainsCoreEndpoints() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
@@ -41,6 +41,7 @@ class SafefamApplicationTests {
         assertTrue(openApiDocument.contains("/api/v1/auth/phone-verifications/verify"));
         assertTrue(openApiDocument.contains("/api/v1/users/me"));
         assertTrue(openApiDocument.contains("/api/v1/analyses"));
+        assertTrue(openApiDocument.contains("/api/v1/chat"));
         assertTrue(openApiDocument.contains("/api/v1/statistics/overview"));
         assertTrue(openApiDocument.contains("/api/v1/statistics/trends"));
         assertTrue(openApiDocument.contains("/api/v1/devices"));
