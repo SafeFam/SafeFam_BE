@@ -179,6 +179,30 @@ public enum ErrorCode {
             HttpStatus.CONFLICT,
             "FA008",
             "이미 처리가 완료된 가족 안전 대응 건입니다."
+    ),
+
+    CHAT_ANALYSIS_NOT_READY(
+            HttpStatus.CONFLICT,
+            "CH001",
+            "챗봇 상담에 사용할 분석 결과가 아직 준비되지 않았습니다."
+    ),
+
+    CHAT_SERVICE_UNAVAILABLE(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "CH002",
+            "챗봇 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."
+    ),
+
+    CHAT_SERVICE_TIMEOUT(
+            HttpStatus.GATEWAY_TIMEOUT,
+            "CH003",
+            "챗봇 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요."
+    ),
+
+    CHAT_INVALID_RESPONSE(
+            HttpStatus.BAD_GATEWAY,
+            "CH004",
+            "챗봇 서비스에서 올바른 응답을 받지 못했습니다."
     );
 
     private final HttpStatus status;

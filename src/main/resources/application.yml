@@ -63,6 +63,11 @@ firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
 
 safefam:
+  ai:
+    chat:
+      base-url: ${AI_CHAT_BASE_URL:http://localhost:8000}
+      connect-timeout: ${AI_CHAT_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_CHAT_READ_TIMEOUT:60s}
   messaging:
     analysis:
       exchange: safefam.analysis
