@@ -40,3 +40,13 @@ out/
 postgres-start.log
 
 .env
+
+.env.*
+!.env.example
+!.env.prod.example
+
+secrets/
+**/firebase-service-account*.json
+**/service-account*.json
+*.pem
+*.key

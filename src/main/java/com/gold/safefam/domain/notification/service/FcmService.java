@@ -37,20 +37,20 @@ public class FcmService {
 
         // Firebase 서버로 메시지 전송 및 예외 처리
         try {
-            String response =
-                    FirebaseMessaging.getInstance().send(message);
+            FirebaseMessaging.getInstance().send(message);
 
             log.info(
-                    "FCM notification sent: {}",
-                    response
+                    "FCM notification sent. analysisId={}",
+                    analysisId
             );
 
             return true;
         } catch (FirebaseMessagingException exception) {
-            // FCM 발송 실패
+            // SDK 예외 원문에는 등록 토큰 등 민감 정보가 포함될 수 있어 기록하지 않는다.
             log.warn(
-                    "FCM notification failed: {}",
-                    exception.getMessage()
+                    "FCM notification failed. analysisId={}, errorCode={}",
+                    analysisId,
+                    exception.getMessagingErrorCode()
             );
 
             return false;
