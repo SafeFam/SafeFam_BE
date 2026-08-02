@@ -48,7 +48,6 @@ postgres-start.log
 secrets/
 **/firebase-service-account*.json
 **/service-account*.json
+*-firebase-adminsdk-*.json
 *.pem
 *.key
-# Firebase service-account credentials
-*-firebase-adminsdk-*.json

@@ -70,13 +70,11 @@ public class FcmService {
     ) {
         try {
             FirebaseMessaging.getInstance().send(message);
-
             log.info(
                     "FCM notification sent. type={}, analysisId={}",
                     notificationType,
                     analysisId
             );
-
             return true;
         } catch (FirebaseMessagingException exception) {
             // 예외 원문에는 등록 토큰 등 민감 정보가 포함될 수 있어 기록하지 않는다.
@@ -86,7 +84,6 @@ public class FcmService {
                     analysisId,
                     exception.getMessagingErrorCode()
             );
-
             return false;
         }
     }
