@@ -5,8 +5,6 @@ import com.gold.safefam.domain.analysis.enums.PhishingCategory;
 import com.gold.safefam.domain.analysis.enums.RiskLevel;
 import com.gold.safefam.domain.analysis.privacy.PiiMaskingService;
 import com.gold.safefam.domain.analysis.repository.AnalysisRepository;
-import com.gold.safefam.domain.family.enums.FamilyLinkStatus;
-import com.gold.safefam.domain.family.repository.FamilyLinkRepository;
 import com.gold.safefam.domain.family.safety.dto.FamilyCallResponse;
 import com.gold.safefam.domain.family.safety.dto.FamilySafetyCaseCreationResult;
 import com.gold.safefam.domain.family.safety.dto.FamilySafetyCaseResponse;
@@ -46,13 +44,15 @@ public class FamilySafetyCaseService {
     );
 
     private final FamilySafetyCaseRepository safetyCaseRepository;
-    private final FamilyLinkRepository familyLinkRepository;
     private final AnalysisRepository analysisRepository;
     private final UserRepository userRepository;
     private final PiiMaskingService piiMaskingService;
 
     @Value("${safefam.family-safety.reminder-delay-minutes:10}")
     private long reminderDelayMinutes;
+
+    @Value("${safefam.family-safety.failure-retry-delay-minutes:1}")
+    private long failureRetryDelayMinutes;
 
     /**
      * HIGH 분석 행을 잠근 뒤 공동 대응 건을 한 번만 생성한다.
@@ -80,6 +80,17 @@ public class FamilySafetyCaseService {
                 .ifPresent(safetyCase -> safetyCase.recordNotificationDelivered(OffsetDateTime.now()));
     }
 
+    /** 재알림 성공을 기록하고 다음 정상 재알림 시각을 설정한다. */
+    @Transactional
+    public void recordReminderDelivered(Long caseId) {
+        OffsetDateTime now = OffsetDateTime.now();
+        safetyCaseRepository.findByIdForUpdate(caseId)
+                .ifPresent(safetyCase -> safetyCase.recordReminderDelivered(
+                        now,
+                        now.plusMinutes(reminderDelayMinutes)
+                ));
+    }
+
     /** 현재 보호자가 접근할 수 있는 공동 대응 건을 상태 조건과 함께 조회한다. */
     public PageResponse<FamilySafetyCaseResponse> getCases(
             Long guardianId,
@@ -101,17 +112,15 @@ public class FamilySafetyCaseService {
 
     /** ACTIVE 가족 관계를 검증한 뒤 공동 대응 건 상세 정보를 반환한다. */
     public FamilySafetyCaseResponse getCase(Long guardianId, Long caseId) {
-        FamilySafetyCase safetyCase = safetyCaseRepository.findDetailedById(caseId)
+        FamilySafetyCase safetyCase = safetyCaseRepository.findAccessibleDetailedById(caseId, guardianId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FAMILY_SAFETY_CASE_NOT_FOUND));
-        validateGuardianAccess(guardianId, safetyCase.getWard().getId());
         return FamilySafetyCaseResponse.from(safetyCase);
     }
 
     /** 보호자의 통화 시도를 기록하고 앱이 전화를 걸 수 있도록 가족 번호를 반환한다. */
     @Transactional
     public FamilyCallResponse startCall(Long guardianId, Long caseId) {
-        FamilySafetyCase safetyCase = findForAction(caseId);
-        validateGuardianAccess(guardianId, safetyCase.getWard().getId());
+        FamilySafetyCase safetyCase = findForAction(guardianId, caseId);
         User guardian = findUser(guardianId);
 
         try {
@@ -139,8 +148,7 @@ public class FamilySafetyCaseService {
             throw new BusinessException(ErrorCode.FAMILY_SAFETY_INVALID_STATUS);
         }
 
-        FamilySafetyCase safetyCase = findForAction(caseId);
-        validateGuardianAccess(guardianId, safetyCase.getWard().getId());
+        FamilySafetyCase safetyCase = findForAction(guardianId, caseId);
         User guardian = findUser(guardianId);
         try {
             safetyCase.resolve(resolution, guardian, OffsetDateTime.now());
@@ -160,9 +168,9 @@ public class FamilySafetyCaseService {
         List<FamilySafetyCase> dueCases = safetyCaseRepository.findDueCases(
                 UNRESOLVED_STATUSES, now, PageRequest.of(0, 100)
         );
-        OffsetDateTime nextReminderAt = now.plusMinutes(reminderDelayMinutes);
+        OffsetDateTime failureRetryAt = now.plusMinutes(failureRetryDelayMinutes);
+        dueCases.forEach(safetyCase -> safetyCase.claimReminder(now, failureRetryAt));
         return dueCases.stream()
-                .peek(safetyCase -> safetyCase.claimReminder(now, nextReminderAt))
                 .map(this::toNotificationTarget)
                 .toList();
     }
@@ -187,18 +195,9 @@ public class FamilySafetyCaseService {
         return toNotificationTarget(safetyCaseRepository.saveAndFlush(safetyCase));
     }
 
-    private FamilySafetyCase findForAction(Long caseId) {
-        return safetyCaseRepository.findByIdForUpdate(caseId)
+    private FamilySafetyCase findForAction(Long guardianId, Long caseId) {
+        return safetyCaseRepository.findAccessibleByIdForUpdate(caseId, guardianId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FAMILY_SAFETY_CASE_NOT_FOUND));
-    }
-
-    private void validateGuardianAccess(Long guardianId, Long wardId) {
-        boolean linked = familyLinkRepository.existsByProtectorIdAndWardIdAndStatus(
-                guardianId, wardId, FamilyLinkStatus.ACTIVE
-        );
-        if (!linked) {
-            throw new BusinessException(ErrorCode.FAMILY_LINK_FORBIDDEN);
-        }
     }
 
     private User findUser(Long userId) {

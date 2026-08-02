@@ -24,7 +24,7 @@ public interface FamilySafetyCaseRepository extends JpaRepository<FamilySafetyCa
     /** 동일 HIGH 분석에 이미 생성된 공동 대응 건이 있는지 조회한다. */
     Optional<FamilySafetyCase> findByAnalysisId(Long analysisId);
 
-    /** 상세 응답에 필요한 분석, 보호 대상, 통화자와 처리자를 한 번에 조회한다. */
+    /** 보호자 관계를 검증하면서 상세 응답에 필요한 연관 데이터를 한 번에 조회한다. */
     @Query("""
             SELECT safetyCase
             FROM FamilySafetyCase safetyCase
@@ -33,21 +33,46 @@ public interface FamilySafetyCaseRepository extends JpaRepository<FamilySafetyCa
             LEFT JOIN FETCH safetyCase.calledBy
             LEFT JOIN FETCH safetyCase.handledBy
             WHERE safetyCase.id = :caseId
+              AND EXISTS (
+                  SELECT link.id
+                  FROM FamilyLink link
+                  WHERE link.protector.id = :guardianId
+                    AND link.ward.id = safetyCase.ward.id
+                    AND link.status = 'ACTIVE'
+              )
             """)
-    Optional<FamilySafetyCase> findDetailedById(@Param("caseId") Long caseId);
+    Optional<FamilySafetyCase> findAccessibleDetailedById(
+            @Param("caseId") Long caseId,
+            @Param("guardianId") Long guardianId
+    );
 
-    /** 전화 또는 완료 처리 중 상태가 동시에 변경되지 않도록 행을 잠가 조회한다. */
+    /** 내부 알림 기록 중 상태가 동시에 변경되지 않도록 대응 건 루트 행만 잠근다. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT safetyCase
             FROM FamilySafetyCase safetyCase
-            JOIN FETCH safetyCase.analysis
-            JOIN FETCH safetyCase.ward
-            LEFT JOIN FETCH safetyCase.calledBy
-            LEFT JOIN FETCH safetyCase.handledBy
             WHERE safetyCase.id = :caseId
             """)
     Optional<FamilySafetyCase> findByIdForUpdate(@Param("caseId") Long caseId);
+
+    /** 보호자 관계를 쿼리에서 검증하고 전화 또는 완료 처리할 대응 건 루트 행만 잠근다. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT safetyCase
+            FROM FamilySafetyCase safetyCase
+            WHERE safetyCase.id = :caseId
+              AND EXISTS (
+                  SELECT link.id
+                  FROM FamilyLink link
+                  WHERE link.protector.id = :guardianId
+                    AND link.ward.id = safetyCase.ward.id
+                    AND link.status = 'ACTIVE'
+              )
+            """)
+    Optional<FamilySafetyCase> findAccessibleByIdForUpdate(
+            @Param("caseId") Long caseId,
+            @Param("guardianId") Long guardianId
+    );
 
     /** 현재 보호자가 ACTIVE 관계로 연결된 가족의 대응 건만 페이지로 조회한다. */
     @Query(

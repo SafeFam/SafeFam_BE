@@ -34,6 +34,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -117,6 +119,13 @@ class FamilySafetyCaseFlowTest {
                 .andExpect(jsonPath("$.data.content.length()").value(1))
                 .andExpect(jsonPath("$.data.content[0].caseId").value(caseId));
 
+        mockMvc.perform(get("/api/v1/family/alerts")
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .param("status", "PENDING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].status").value("PENDING"));
+
         mockMvc.perform(get("/api/v1/family/alerts/{caseId}", caseId)
                         .header("Authorization", "Bearer " + guardianToken))
                 .andExpect(status().isOk())
@@ -124,9 +133,12 @@ class FamilySafetyCaseFlowTest {
                 .andExpect(jsonPath("$.data.riskScore").value(91))
                 .andExpect(jsonPath("$.data.wardName").value("어머니"))
                 .andExpect(jsonPath("$.data.maskedMessagePreview").value(
-                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("010-9876-5432"))))
+                        containsString("[PHONE]")))
+                .andExpect(jsonPath("$.data.maskedMessagePreview").value(
+                        not(containsString("010-9876-5432"))))
+                .andExpect(jsonPath("$.data.riskSummary").value(containsString("[ACCOUNT]")))
                 .andExpect(jsonPath("$.data.riskSummary").value(
-                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("110-1234-567890"))));
+                        not(containsString("110-1234-567890"))));
 
         mockMvc.perform(post("/api/v1/family/alerts/{caseId}/call", caseId)
                         .header("Authorization", "Bearer " + guardianToken))
@@ -160,11 +172,15 @@ class FamilySafetyCaseFlowTest {
 
         mockMvc.perform(get("/api/v1/family/alerts/{caseId}", target.caseId())
                         .header("Authorization", "Bearer " + strangerToken))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/api/v1/family/alerts/{caseId}/call", target.caseId())
                         .header("Authorization", "Bearer " + strangerToken))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/v1/family/alerts/{caseId}", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + strangerToken))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -187,6 +203,9 @@ class FamilySafetyCaseFlowTest {
         safetyCaseRepository.saveAndFlush(dueCase);
 
         safetyCaseService.resolve(guardianId, current.getId(), FamilySafetyStatus.SAFE_CONFIRMED);
+        FamilySafetyCase resolved = safetyCaseRepository.findById(current.getId()).orElseThrow();
+        assertThat(resolved.getNextReminderAt()).isNull();
+
         List<FamilySafetyNotificationTarget> reminders = safetyCaseService.claimDueReminders();
 
         assertThat(reminders).extracting(FamilySafetyNotificationTarget::caseId)
@@ -194,6 +213,12 @@ class FamilySafetyCaseFlowTest {
         FamilySafetyCase claimed = safetyCaseRepository.findById(dueCase.getId()).orElseThrow();
         assertEquals(1, claimed.getReminderCount());
         assertThat(claimed.getNextReminderAt()).isAfter(OffsetDateTime.now());
+        assertThat(claimed.getNextReminderAt()).isBefore(OffsetDateTime.now().plusMinutes(2));
+
+        safetyCaseService.recordReminderDelivered(dueCase.getId());
+        FamilySafetyCase delivered = safetyCaseRepository.findById(dueCase.getId()).orElseThrow();
+        assertThat(delivered.getLastNotifiedAt()).isNotNull();
+        assertThat(delivered.getNextReminderAt()).isAfter(OffsetDateTime.now().plusMinutes(5));
     }
 
     @Test
@@ -207,6 +232,19 @@ class FamilySafetyCaseFlowTest {
                                 { "status": "PENDING" }
                                 """))
                 .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void invalidPaginationIsRejected() throws Exception {
+        mockMvc.perform(get("/api/v1/family/alerts")
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .param("page", "-1"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/v1/family/alerts")
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .param("size", "101"))
+                .andExpect(status().isBadRequest());
     }
 
     private Analysis saveHighAnalysis(Long userId) {

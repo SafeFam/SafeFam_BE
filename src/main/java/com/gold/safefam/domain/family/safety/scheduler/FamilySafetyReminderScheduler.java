@@ -28,7 +28,7 @@ public class FamilySafetyReminderScheduler {
         List<FamilySafetyNotificationTarget> targets = safetyCaseService.claimDueReminders();
         for (FamilySafetyNotificationTarget target : targets) {
             if (notificationService.send(target, true)) {
-                safetyCaseService.recordNotificationDelivered(target.caseId());
+                safetyCaseService.recordReminderDelivered(target.caseId());
             }
         }
         if (!targets.isEmpty()) {

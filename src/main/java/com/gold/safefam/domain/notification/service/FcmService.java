@@ -39,26 +39,11 @@ public class FcmService {
                 )
                 .build();
 
-        // Firebase 서버로 메시지 전송 및 예외 처리
-        try {
-            String response =
-                    FirebaseMessaging.getInstance().send(message);
-
-            log.info(
-                    "FCM notification sent: {}",
-                    response
-            );
-
-            return true;
-        } catch (FirebaseMessagingException exception) {
-            // FCM 발송 실패
-            log.warn(
-                    "FCM notification failed: {}",
-                    exception.getMessage()
-            );
-
-            return false;
-        }
+        return send(
+                message,
+                "FCM notification sent: {}",
+                "FCM notification failed: {}"
+        );
     }
 
     /** 보호자 공동 대응 화면으로 연결되는 caseId를 데이터 페이로드에 포함해 전송한다. */
@@ -82,12 +67,21 @@ public class FcmService {
                 .putData("familySafetyCaseId", String.valueOf(safetyCaseId))
                 .build();
 
+        return send(
+                message,
+                "Family safety FCM notification sent: {}",
+                "Family safety FCM notification failed: {}"
+        );
+    }
+
+    /** Firebase 전송과 예외 변환을 한곳에서 처리해 모든 FCM 경로의 실패 정책을 통일한다. */
+    private boolean send(Message message, String successLogTemplate, String failureLogTemplate) {
         try {
             String response = FirebaseMessaging.getInstance().send(message);
-            log.info("Family safety FCM notification sent: {}", response);
+            log.info(successLogTemplate, response);
             return true;
         } catch (FirebaseMessagingException exception) {
-            log.warn("Family safety FCM notification failed: {}", exception.getMessage());
+            log.warn(failureLogTemplate, exception.getMessage());
             return false;
         }
     }

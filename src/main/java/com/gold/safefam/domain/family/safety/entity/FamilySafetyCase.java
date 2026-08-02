@@ -132,13 +132,21 @@ public class FamilySafetyCase {
         updatedAt = deliveredAt;
     }
 
-    /** 스케줄러가 미확인 건을 선점하고 다음 재알림 시각을 예약한다. */
-    public void claimReminder(OffsetDateTime now, OffsetDateTime nextReminderAt) {
+    /** 재알림 성공 시 전달 시각을 기록하고 다음 정상 재알림 시각을 예약한다. */
+    public void recordReminderDelivered(OffsetDateTime deliveredAt, OffsetDateTime nextReminderAt) {
+        recordNotificationDelivered(deliveredAt);
+        if (!status.isResolved()) {
+            this.nextReminderAt = nextReminderAt;
+        }
+    }
+
+    /** 스케줄러가 미확인 건을 선점하고 실패 시 사용할 짧은 재시도 시각을 예약한다. */
+    public void claimReminder(OffsetDateTime now, OffsetDateTime failureRetryAt) {
         if (status.isResolved()) {
             return;
         }
         reminderCount++;
-        this.nextReminderAt = nextReminderAt;
+        nextReminderAt = failureRetryAt;
         updatedAt = now;
     }
 
