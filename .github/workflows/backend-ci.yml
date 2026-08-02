@@ -69,6 +69,16 @@ jobs:
     name: Integrated Compose build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      POSTGRES_USER: ci_user
+      POSTGRES_PASSWORD: ci_password
+      RABBITMQ_USERNAME: ci_user
+      RABBITMQ_PASSWORD: ci_password
+      RABBITMQ_URL: amqp://ci_user:ci_password@rabbitmq:5672/
+      JWT_SECRET: ci-only-jwt-secret
+      OUTBOX_ENCRYPTION_KEY_BASE64: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      FIREBASE_SERVICE_ACCOUNT_HOST_PATH: ./ci-firebase-service-account.json
+      GEMINI_API_KEY: ci-only-gemini-key
     needs:
       - test
 

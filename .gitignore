@@ -41,5 +41,13 @@ postgres-start.log
 
 .env
 
-# Firebase service-account credentials
+.env.*
+!.env.example
+!.env.prod.example
+
+secrets/
+**/firebase-service-account*.json
+**/service-account*.json
 *-firebase-adminsdk-*.json
+*.pem
+*.key

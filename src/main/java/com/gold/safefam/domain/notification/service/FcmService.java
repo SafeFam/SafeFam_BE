@@ -17,14 +17,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FcmService {
 
-    /* 단일 기기 대상 FCM 푸시 알림 전송 */
+    /** 단일 기기 대상 FCM 푸시 알림 전송 */
     public boolean sendNotification(
             String fcmToken,
             String title,
             String body,
             Long analysisId
     ) {
-        // FCM 메시지 빌드 (시각적 알림 헤더 + 백그라운드/딥링크용 데이터 페이로드)
         Message message = Message.builder()
                 .setToken(fcmToken)
                 .setNotification(
@@ -33,17 +32,10 @@ public class FcmService {
                                 .setBody(body)
                                 .build()
                 )
-                .putData(
-                        "analysisId",
-                        String.valueOf(analysisId)
-                )
+                .putData("analysisId", String.valueOf(analysisId))
                 .build();
 
-        return send(
-                message,
-                "FCM notification sent: {}",
-                "FCM notification failed: {}"
-        );
+        return send(message, "analysis", analysisId);
     }
 
     /** 보호자 공동 대응 화면으로 연결되는 caseId를 데이터 페이로드에 포함해 전송한다. */
@@ -67,21 +59,31 @@ public class FcmService {
                 .putData("familySafetyCaseId", String.valueOf(safetyCaseId))
                 .build();
 
-        return send(
-                message,
-                "Family safety FCM notification sent: {}",
-                "Family safety FCM notification failed: {}"
-        );
+        return send(message, "family-safety", analysisId);
     }
 
-    /** Firebase 전송과 예외 변환을 한곳에서 처리해 모든 FCM 경로의 실패 정책을 통일한다. */
-    private boolean send(Message message, String successLogTemplate, String failureLogTemplate) {
+    /** Firebase 전송과 예외 변환을 한곳에서 처리한다. */
+    private boolean send(
+            Message message,
+            String notificationType,
+            Long analysisId
+    ) {
         try {
-            String response = FirebaseMessaging.getInstance().send(message);
-            log.info(successLogTemplate, response);
+            FirebaseMessaging.getInstance().send(message);
+            log.info(
+                    "FCM notification sent. type={}, analysisId={}",
+                    notificationType,
+                    analysisId
+            );
             return true;
         } catch (FirebaseMessagingException exception) {
-            log.warn(failureLogTemplate, exception.getMessage());
+            // 예외 원문에는 등록 토큰 등 민감 정보가 포함될 수 있어 기록하지 않는다.
+            log.warn(
+                    "FCM notification failed. type={}, analysisId={}, errorCode={}",
+                    notificationType,
+                    analysisId,
+                    exception.getMessagingErrorCode()
+            );
             return false;
         }
     }

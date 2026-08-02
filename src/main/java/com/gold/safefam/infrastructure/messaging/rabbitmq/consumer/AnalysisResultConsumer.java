@@ -4,6 +4,7 @@ import com.gold.safefam.domain.analysis.messaging.event.AnalysisResultEvent;
 import com.gold.safefam.domain.analysis.service.AnalysisResultApplyService;
 import com.gold.safefam.domain.analysis.service.AnalysisResultValidator;
 import com.rabbitmq.client.Channel;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -19,6 +20,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
 @Component
+@ConditionalOnProperty(
+        prefix = "safefam.messaging.analysis",
+        name = "consumer-enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class AnalysisResultConsumer {
 
     private static final Logger log =

@@ -1,0 +1,56 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+
+  rabbitmq:
+    addresses: ${RABBITMQ_URL}
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+jwt:
+  secret: ${JWT_SECRET}
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  sender: ${SOLAPI_SENDER}
+
+firebase:
+  enabled: ${FIREBASE_ENABLED:true}
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
+
+safefam:
+  messaging:
+    analysis:
+      publisher-enabled: ${ANALYSIS_PUBLISHER_ENABLED:true}
+      consumer-enabled: ${ANALYSIS_CONSUMER_ENABLED:true}
+    outbox:
+      encryption-key: ${OUTBOX_ENCRYPTION_KEY_BASE64}
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN

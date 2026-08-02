@@ -7,3 +7,13 @@ build
 .env
 docker-compose.yml
 HELP.md
+
+.env.*
+secrets
+**/firebase-service-account*.json
+**/service-account*.json
+*.pem
+*.key
+
+docs
+src/test

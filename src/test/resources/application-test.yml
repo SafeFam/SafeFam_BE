@@ -13,6 +13,11 @@ spring:
   flyway:
     enabled: false
 
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
 kakao:
   client-id: test-client-id
   user-info-url: https://kapi.kakao.com/v2/user/me
@@ -23,7 +28,7 @@ solapi:
   sender: "01000000000"
 
 firebase:
-  service-account-path: test
+  enabled: false
 
 safefam:
   messaging:

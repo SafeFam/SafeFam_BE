@@ -5,10 +5,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-safefam}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -28,11 +26,8 @@ services:
     container_name: safefam-rabbitmq
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-safefam}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-safefam-local}
-    ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:?RABBITMQ_USERNAME is required}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
@@ -56,34 +51,39 @@ services:
     container_name: safefam-spring-server
     restart: unless-stopped
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-safefam}
-      DB_USERNAME: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_PROFILES_ACTIVE: prod
 
-      RABBITMQ_URL: amqp://${RABBITMQ_USERNAME:-safefam}:${RABBITMQ_PASSWORD:-safefam-local}@rabbitmq:5672/
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-safefam}
+      DB_USERNAME: ${POSTGRES_USER:?POSTGRES_USER is required}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+
+      RABBITMQ_URL: ${RABBITMQ_URL:?RABBITMQ_URL is required}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-safefam}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-safefam-local}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
 
       ANALYSIS_PUBLISHER_ENABLED: "${ANALYSIS_PUBLISHER_ENABLED:-true}"
       ANALYSIS_CONSUMER_ENABLED: "${ANALYSIS_CONSUMER_ENABLED:-true}"
 
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-1800000}
       JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-604800000}
 
-      OUTBOX_ENCRYPTION_KEY_BASE64: ${OUTBOX_ENCRYPTION_KEY_BASE64}
+      OUTBOX_ENCRYPTION_KEY_BASE64: ${OUTBOX_ENCRYPTION_KEY_BASE64:?OUTBOX_ENCRYPTION_KEY_BASE64 is required}
 
-      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-local-kakao-client}
-      SOLAPI_API_KEY: ${SOLAPI_API_KEY:-local-solapi-key}
-      SOLAPI_API_SECRET: ${SOLAPI_API_SECRET:-local-solapi-secret}
-      SOLAPI_SENDER: ${SOLAPI_SENDER:-01000000000}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      SOLAPI_API_KEY: ${SOLAPI_API_KEY}
+      SOLAPI_API_SECRET: ${SOLAPI_API_SECRET}
+      SOLAPI_SENDER: ${SOLAPI_SENDER}
 
-      # 로컬 통합 환경에서는 Firebase 초기화 생략
-      FIREBASE_SERVICE_ACCOUNT_PATH: test
+      FIREBASE_ENABLED: "true"
+      FIREBASE_SERVICE_ACCOUNT_PATH: /run/secrets/firebase/service-account.json
+    volumes:
+      - ${FIREBASE_SERVICE_ACCOUNT_HOST_PATH:?FIREBASE_SERVICE_ACCOUNT_HOST_PATH is required}:/run/secrets/firebase/service-account.json:ro
     ports:
-      - "${SPRING_PORT:-8080}:8080"
+      # 호스트 Nginx만 접근할 수 있도록 EC2 루프백에만 바인딩한다.
+      - "127.0.0.1:${SPRING_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -109,7 +109,7 @@ services:
     container_name: safefam-ai-server
     restart: unless-stopped
     environment:
-      RABBITMQ_URL: amqp://${RABBITMQ_USERNAME:-safefam}:${RABBITMQ_PASSWORD:-safefam-local}@rabbitmq:5672/
+      RABBITMQ_URL: ${RABBITMQ_URL:?RABBITMQ_URL is required}
 
       RABBITMQ_ANALYSIS_EXCHANGE: safefam.analysis
       RABBITMQ_ANALYSIS_REQUEST_QUEUE: safefam.analysis.requested.q
@@ -128,6 +128,7 @@ services:
       RABBITMQ_SHUTDOWN_TIMEOUT_SECONDS: ${RABBITMQ_SHUTDOWN_TIMEOUT_SECONDS:-30}
       RABBITMQ_REQUEUE_BACKOFF_SECONDS: ${RABBITMQ_REQUEUE_BACKOFF_SECONDS:-1}
 
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
       VIRUSTOTAL_API_KEY: ${VIRUSTOTAL_API_KEY:-}
       GOOGLE_SAFE_BROWSING_API_KEY: ${GOOGLE_SAFE_BROWSING_API_KEY:-}
     command:
@@ -141,8 +142,6 @@ services:
         "--root-path",
         "/ai"
       ]
-    ports:
-      - "${FASTAPI_PORT:-8000}:8000"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -158,35 +157,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-    networks:
-      - safefam-network
-
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: safefam-nginx
-    restart: unless-stopped
-    ports:
-      - "${NGINX_PORT:-80}:80"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      spring-backend:
-        condition: service_healthy
-      fastapi-ai:
-        condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "-q",
-          "-O",
-          "-",
-          "http://localhost/health"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - safefam-network
 
