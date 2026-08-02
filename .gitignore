@@ -40,3 +40,6 @@ out/
 postgres-start.log
 
 .env
+
+# Firebase service-account credentials
+*-firebase-adminsdk-*.json
