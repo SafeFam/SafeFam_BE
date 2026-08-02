@@ -87,3 +87,7 @@ safefam:
       encryption-key: ${OUTBOX_ENCRYPTION_KEY_BASE64}
   scheduler:
     time-zone: Asia/Seoul
+  # 가족 안전 미확인 재알림 간격과 스케줄러 조회 주기
+  family-safety:
+    reminder-delay-minutes: ${FAMILY_SAFETY_REMINDER_DELAY_MINUTES:10}
+    scheduler-delay-ms: ${FAMILY_SAFETY_SCHEDULER_DELAY_MS:60000}
