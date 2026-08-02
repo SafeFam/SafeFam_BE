@@ -23,7 +23,7 @@ solapi:
   sender: "01000000000"
 
 firebase:
-  service-account-path: test
+  enabled: false
 
 safefam:
   messaging:

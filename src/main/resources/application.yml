@@ -59,7 +59,8 @@ solapi:
   sender: ${SOLAPI_SENDER}
 
 firebase:
-  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
+  enabled: ${FIREBASE_ENABLED:false}
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
 
 safefam:
   messaging:
