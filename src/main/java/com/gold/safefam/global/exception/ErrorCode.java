@@ -140,7 +140,7 @@ public enum ErrorCode {
     ),
 
     FAMILY_INVITE_EXPIRED(
-            HttpStatus.UNPROCESSABLE_ENTITY,
+            HttpStatus.UNPROCESSABLE_CONTENT,
             "FA002",
                     "만료된 초대 코드입니다."
     ),
@@ -158,9 +158,27 @@ public enum ErrorCode {
     ),
 
     FAMILY_SELF_LINK(
-            HttpStatus.UNPROCESSABLE_ENTITY,
+            HttpStatus.UNPROCESSABLE_CONTENT,
             "FA005",
                     "자기 자신과 연결할 수 없습니다."
+    ),
+
+    FAMILY_SAFETY_CASE_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "FA006",
+            "가족 안전 대응 건을 찾을 수 없습니다."
+    ),
+
+    FAMILY_SAFETY_INVALID_STATUS(
+            HttpStatus.UNPROCESSABLE_CONTENT,
+            "FA007",
+            "처리할 수 없는 가족 안전 상태입니다."
+    ),
+
+    FAMILY_SAFETY_ALREADY_RESOLVED(
+            HttpStatus.CONFLICT,
+            "FA008",
+            "이미 처리가 완료된 가족 안전 대응 건입니다."
     );
 
     private final HttpStatus status;
