@@ -35,7 +35,7 @@ import java.time.LocalDate;
  * 문자 위험 분석과 인증 사용자의 탐지 이력 관리 HTTP API를 제공한다.
  * 인증 주체에서 사용자 ID를 받아 요청 검증 이후 실제 처리는 {@link AnalysisService}에 위임한다.
  */
-@Tag(name = "3. 문자 분석", description = "금융 사기 문자 분석 및 탐지 이력 관리")
+@Tag(name = "03. 문자 분석", description = "금융 사기 문자 분석 및 탐지 이력 관리")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
 @Validated
 @RequiredArgsConstructor

@@ -11,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,6 +96,24 @@ class AiChatClientTest {
 
         assertEquals(ErrorCode.CHAT_INVALID_RESPONSE, exception.getErrorCode());
         server.verify();
+    }
+
+    @Test
+    void mapsSocketTimeoutToTimeoutError() {
+        RestTemplate restTemplate = new RestTemplate((uri, method) -> {
+            throw new ResourceAccessException(
+                    "Read timed out",
+                    new SocketTimeoutException("Read timed out")
+            );
+        });
+        AiChatClient client = new AiChatClient(restTemplate, "http://fastapi-ai:8000");
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> client.chat(request())
+        );
+
+        assertEquals(ErrorCode.CHAT_SERVICE_TIMEOUT, exception.getErrorCode());
     }
 
     private AiChatRequest request() {

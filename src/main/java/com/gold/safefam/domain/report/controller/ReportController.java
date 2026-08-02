@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 탐지 이력 신고 요청을 받는 HTTP 진입점이다.
  * 인증 사용자 소유권 검증과 익명 스냅샷 저장은 {@link ReportService}에 위임한다.
  */
-@Tag(name = "7. 신고", description = "탐지 이력 익명 신고")
+@Tag(name = "07. 신고", description = "탐지 이력 익명 신고")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
 @RequiredArgsConstructor
 @RestController

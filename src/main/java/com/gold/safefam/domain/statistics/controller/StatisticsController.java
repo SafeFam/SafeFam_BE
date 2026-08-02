@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 개인 탐지 대시보드와 전체 익명 트렌드 카드 조회 API를 제공한다.
  * 개인 통계는 인증 사용자 범위로, 트렌드는 월간 중·고위험 표본 전체로 집계한다.
  */
-@Tag(name = "4. 통계", description = "개인 탐지 이력 대시보드")
+@Tag(name = "04. 통계", description = "개인 탐지 이력 대시보드")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
 @Validated
 @RequiredArgsConstructor

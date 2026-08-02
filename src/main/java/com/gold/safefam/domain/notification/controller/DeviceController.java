@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "5. 푸시 알림 기기", description = "분석 완료 알림을 받을 모바일 기기 관리")
+@Tag(name = "05. 푸시 알림 기기", description = "분석 완료 알림을 받을 모바일 기기 관리")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
 @RestController
 @RequestMapping("/api/v1/devices")

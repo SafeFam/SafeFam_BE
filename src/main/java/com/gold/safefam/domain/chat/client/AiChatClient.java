@@ -2,6 +2,7 @@ package com.gold.safefam.domain.chat.client;
 
 import com.gold.safefam.global.exception.BusinessException;
 import com.gold.safefam.global.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.util.List;
 
 /** FastAPI의 stateless /api/chat 계약만 담당하는 HTTP 클라이언트. */
+@Slf4j
 @Component
 public class AiChatClient {
 
@@ -67,6 +69,7 @@ public class AiChatClient {
             }
             throw new BusinessException(ErrorCode.CHAT_INVALID_RESPONSE);
         } catch (RuntimeException exception) {
+            log.error("Unexpected failure calling FastAPI chat endpoint: {}", chatUrl, exception);
             throw new BusinessException(ErrorCode.CHAT_INVALID_RESPONSE);
         }
     }

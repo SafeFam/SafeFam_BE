@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "2. 사용자", description = "내 정보 및 탐지·알림 설정 관리")
+@Tag(name = "02. 사용자", description = "내 정보 및 탐지·알림 설정 관리")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_SCHEME_NAME)
 @RestController
 @RequestMapping("/api/v1/users/me")

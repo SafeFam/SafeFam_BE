@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * 보호자가 가족 공동 대응 건을 조회하고 전화 및 최종 처리를 수행하는 REST API다.
  * 인증 사용자 ID를 서비스로 전달하며 실제 권한과 상태 전이 검증은 도메인 서비스가 담당한다.
  */
-@Tag(name = "9. 가족 안전 대응", description = "HIGH 위험 탐지 이후 보호자 공동 대응 API")
+@Tag(name = "09. 가족 안전 대응", description = "HIGH 위험 탐지 이후 보호자 공동 대응 API")
 @RestController
 @RequestMapping("/api/v1/family/alerts")
 @RequiredArgsConstructor
