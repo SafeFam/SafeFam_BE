@@ -18,6 +18,12 @@ spring:
       simple:
         auto-startup: false
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
 kakao:
   client-id: test-client-id
   user-info-url: https://kapi.kakao.com/v2/user/me
