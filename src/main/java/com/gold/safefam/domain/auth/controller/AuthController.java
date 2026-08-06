@@ -5,6 +5,8 @@ import com.gold.safefam.domain.auth.service.AuthService;
 import com.gold.safefam.domain.auth.service.PhoneVerificationService;
 import com.gold.safefam.global.config.SwaggerConfig;
 import com.gold.safefam.global.response.ApiResponse;
+import com.gold.safefam.global.security.JwtUtil;
+import com.gold.safefam.global.security.TokenBlacklistService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +39,8 @@ public class AuthController {
 
     private final AuthService authService;
     private final PhoneVerificationService phoneVerificationService;
+    private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
     // 회원가입 전에 휴대폰 소유 여부를 확인하기 위한 인증번호 발송
     @Operation(summary = "휴대폰 인증번호 발송", description = "회원가입에 사용할 휴대폰 번호로 6자리 인증번호를 발송합니다.")
@@ -109,7 +113,11 @@ public class AuthController {
             @Valid @RequestBody LogoutRequest request,
             HttpServletRequest httpRequest
     ) {
-        authService.logout(userId, request.refreshToken(), httpRequest);
+        String accessToken = authService.logout(userId, request.refreshToken(), httpRequest);
+        if (accessToken != null && jwtUtil.validateToken(accessToken)) {
+            long remaining = jwtUtil.getExpiration(accessToken).getTime() - System.currentTimeMillis();
+            tokenBlacklistService.blacklist(accessToken, remaining);
+        }
         return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다."));
     }
 

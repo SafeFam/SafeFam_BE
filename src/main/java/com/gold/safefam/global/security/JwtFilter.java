@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +32,7 @@ import java.util.List;
  * 로그인된 것으로 처리되지 않음!
  */
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -46,10 +48,16 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
-            if (tokenBlacklistService.isBlacklisted(token)) {
-                SecurityContextHolder.clearContext();
-                filterChain.doFilter(request, response);
-                return;
+            try {
+                if (tokenBlacklistService.isBlacklisted(token)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+            } catch (Exception e) {
+                // Redis 장애 시 블랙리스트 체크 생략 (fail-open)
+                // 가용성 우선: Redis 다운되어도 정상 요청은 통과시킴
+                log.warn("Redis blacklist check failed, fail-open: {}", e.getMessage());
             }
             try {
                 if (jwtUtil.getTokenType(token) == TokenType.ACCESS) {
