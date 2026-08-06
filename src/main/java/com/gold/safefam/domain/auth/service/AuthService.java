@@ -10,7 +10,9 @@ import com.gold.safefam.domain.user.repository.UserRepository;
 import com.gold.safefam.global.exception.BusinessException;
 import com.gold.safefam.global.exception.ErrorCode;
 import com.gold.safefam.global.security.JwtUtil;
+import com.gold.safefam.global.security.TokenBlacklistService;
 import com.gold.safefam.global.security.TokenType;
+import jakarta.servlet.http.HttpServletRequest;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +37,7 @@ public class AuthService {
     private final KakaoClient kakaoClient;
     private final PhoneVerificationService phoneVerificationService;
     private final UserService userService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     // 회원가입
     @Transactional
@@ -119,7 +122,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(Long authenticatedUserId, String refreshTokenValue) {
+    public void logout(Long authenticatedUserId, String refreshTokenValue, HttpServletRequest httpRequest) {
         try {
             jwtUtil.validateTokenType(refreshTokenValue, TokenType.REFRESH);
             Long tokenUserId = jwtUtil.getUserId(refreshTokenValue);
@@ -133,6 +136,16 @@ public class AuthService {
                 throw new BusinessException(ErrorCode.INVALID_TOKEN);
             }
             refreshTokenRepository.delete(storedToken);
+
+            // Access Token 블랙리스트 등록
+            String bearerToken = httpRequest.getHeader("Authorization");
+            if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+                String accessToken = bearerToken.substring(7);
+                if (jwtUtil.validateToken(accessToken)) {
+                    long remaining = jwtUtil.getExpiration(accessToken).getTime() - System.currentTimeMillis();
+                    tokenBlacklistService.blacklist(accessToken, remaining);
+                }
+            }
         } catch (BusinessException exception) {
             throw exception;
         } catch (JwtException | IllegalArgumentException exception) {

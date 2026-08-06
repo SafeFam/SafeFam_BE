@@ -44,6 +44,21 @@ services:
     networks:
       - safefam-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: safefam-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    volumes:
+      - ${REDIS_DATA_PATH:-/opt/safefam/volumes/redis}:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - safefam-network
+
   spring-backend:
     build:
       context: .
@@ -83,6 +98,9 @@ services:
 
       FIREBASE_ENABLED: "true"
       FIREBASE_SERVICE_ACCOUNT_PATH: /run/secrets/firebase/service-account.json
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     volumes:
       - ${FIREBASE_SERVICE_ACCOUNT_HOST_PATH:?FIREBASE_SERVICE_ACCOUNT_HOST_PATH is required}:/run/secrets/firebase/service-account.json:ro
     ports:
@@ -92,6 +110,8 @@ services:
       postgres:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test:

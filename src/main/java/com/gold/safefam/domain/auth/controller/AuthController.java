@@ -8,6 +8,7 @@ import com.gold.safefam.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -105,9 +106,10 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody LogoutRequest request
+            @Valid @RequestBody LogoutRequest request,
+            HttpServletRequest httpRequest
     ) {
-        authService.logout(userId, request.refreshToken());
+        authService.logout(userId, request.refreshToken(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다."));
     }
 

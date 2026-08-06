@@ -36,6 +36,7 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -45,6 +46,11 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
+            if (tokenBlacklistService.isBlacklisted(token)) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
             try {
                 if (jwtUtil.getTokenType(token) == TokenType.ACCESS) {
                     Long userId = jwtUtil.getUserId(token);
