@@ -11,6 +11,7 @@ import com.gold.safefam.global.exception.BusinessException;
 import com.gold.safefam.global.exception.ErrorCode;
 import com.gold.safefam.global.security.JwtUtil;
 import com.gold.safefam.global.security.TokenType;
+import jakarta.servlet.http.HttpServletRequest;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -119,7 +120,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(Long authenticatedUserId, String refreshTokenValue) {
+    public String logout(Long authenticatedUserId, String refreshTokenValue, HttpServletRequest httpRequest) {
         try {
             jwtUtil.validateTokenType(refreshTokenValue, TokenType.REFRESH);
             Long tokenUserId = jwtUtil.getUserId(refreshTokenValue);
@@ -133,6 +134,12 @@ public class AuthService {
                 throw new BusinessException(ErrorCode.INVALID_TOKEN);
             }
             refreshTokenRepository.delete(storedToken);
+
+            String bearerToken = httpRequest.getHeader("Authorization");
+            if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+                return bearerToken.substring(7);
+            }
+            return null;
         } catch (BusinessException exception) {
             throw exception;
         } catch (JwtException | IllegalArgumentException exception) {
