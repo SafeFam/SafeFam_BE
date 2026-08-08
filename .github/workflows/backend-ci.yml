@@ -127,3 +127,15 @@ jobs:
           build
           spring-backend
           fastapi-ai
+
+  deploy:
+    name: Deploy Backend
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs:
+      - test
+      - docker-build
+      - compose-build
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/backend-cd.yml
