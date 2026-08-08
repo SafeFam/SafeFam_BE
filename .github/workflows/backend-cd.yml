@@ -1,0 +1,87 @@
+name: Backend CD
+
+on:
+  workflow_run:
+    workflows:
+      - Backend CI
+    types:
+      - completed
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: backend-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy backend to production EC2
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: "351284653057"
+          mask-aws-account-id: true
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Deploy through SSM Run Command
+        env:
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          COMMAND_ID="$(
+            aws ssm send-command \
+              --region "${{ vars.AWS_REGION }}" \
+              --instance-ids "$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --comment "SafeFam Backend ${DEPLOY_SHA}" \
+              --parameters "commands=[\"sudo -u ${DEPLOY_USER} bash /opt/safefam/SafeFam_BE/scripts/deploy-backend.sh ${DEPLOY_SHA}\"]" \
+              --timeout-seconds 1500 \
+              --query "Command.CommandId" \
+              --output text
+          )"
+
+          echo "SSM command ID: $COMMAND_ID"
+
+          aws ssm wait command-executed \
+            --region "${{ vars.AWS_REGION }}" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" || true
+
+          aws ssm get-command-invocation \
+            --region "${{ vars.AWS_REGION }}" \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query '{
+              Status:Status,
+              StandardOutput:StandardOutputContent,
+              StandardError:StandardErrorContent
+            }'
+
+          STATUS="$(
+            aws ssm get-command-invocation \
+              --region "${{ vars.AWS_REGION }}" \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "Status" \
+              --output text
+          )"
+
+          test "$STATUS" = "Success"
