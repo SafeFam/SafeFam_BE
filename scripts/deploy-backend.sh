@@ -32,6 +32,8 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
+git checkout develop
+
 PREVIOUS_SHA="$(git rev-parse HEAD)"
 
 PREVIOUS_IMAGE_ID="$(
@@ -99,6 +101,9 @@ rollback() {
 
   echo "[rollback] Waiting for backend health check"
 
+  backend_address="$(docker compose port "${SERVICE_NAME}" 8080)"
+  health_url="http://${backend_address}/actuator/health"
+
   for attempt in $(seq 1 30); do
     health_response="$(
       curl \
@@ -106,7 +111,7 @@ rollback() {
         --silent \
         --show-error \
         --max-time 5 \
-        http://127.0.0.1:8080/actuator/health 2>/dev/null || true
+        "${health_url}" 2>/dev/null || true
     )"
 
     echo "[rollback] Health check ${attempt}/30"
@@ -133,7 +138,6 @@ echo "[deploy] Requested commit: ${EXPECTED_SHA}"
 echo "[deploy] Updating develop branch"
 
 git fetch origin develop:refs/remotes/origin/develop
-git checkout develop
 git pull --ff-only origin develop
 
 DEPLOYED_SHA="$(git rev-parse HEAD)"
@@ -189,6 +193,9 @@ docker compose up \
 
 echo "[deploy] Waiting for backend health check"
 
+BACKEND_ADDRESS="$(docker compose port "${SERVICE_NAME}" 8080)"
+HEALTH_URL="http://${BACKEND_ADDRESS}/actuator/health"
+
 for attempt in $(seq 1 30); do
   health_response="$(
     curl \
@@ -196,7 +203,7 @@ for attempt in $(seq 1 30); do
       --silent \
       --show-error \
       --max-time 5 \
-      http://127.0.0.1:8080/actuator/health 2>/dev/null || true
+      "${HEALTH_URL}" 2>/dev/null || true
   )"
 
   echo "[deploy] Health check ${attempt}/30"

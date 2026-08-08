@@ -60,10 +60,43 @@ jobs:
 
           echo "SSM command ID: $COMMAND_ID"
 
-          aws ssm wait command-executed \
-            --region "${{ vars.AWS_REGION }}" \
-            --command-id "$COMMAND_ID" \
-            --instance-id "$INSTANCE_ID" || true
+          for attempt in $(seq 1 150); do
+            STATUS="$(
+              aws ssm get-command-invocation \
+                --region "${{ vars.AWS_REGION }}" \
+                --command-id "$COMMAND_ID" \
+                --instance-id "$INSTANCE_ID" \
+                --query "Status" \
+                --output text 2>/dev/null || true
+            )"
+
+            echo "SSM command status ${attempt}/150: ${STATUS:-Pending}"
+
+            case "$STATUS" in
+              Success)
+                break
+                ;;
+              Cancelled|Cancelling|Failed|TimedOut)
+                aws ssm get-command-invocation \
+                  --region "${{ vars.AWS_REGION }}" \
+                  --command-id "$COMMAND_ID" \
+                  --instance-id "$INSTANCE_ID" \
+                  --query '{
+                    Status:Status,
+                    StandardOutput:StandardOutputContent,
+                    StandardError:StandardErrorContent
+                  }'
+                exit 1
+                ;;
+            esac
+
+            sleep 10
+          done
+
+          if [ "${STATUS:-}" != "Success" ]; then
+            echo "SSM command did not finish within 1,500 seconds"
+            exit 1
+          fi
 
           aws ssm get-command-invocation \
             --region "${{ vars.AWS_REGION }}" \
@@ -74,14 +107,3 @@ jobs:
               StandardOutput:StandardOutputContent,
               StandardError:StandardErrorContent
             }'
-
-          STATUS="$(
-            aws ssm get-command-invocation \
-              --region "${{ vars.AWS_REGION }}" \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query "Status" \
-              --output text
-          )"
-
-          test "$STATUS" = "Success"
