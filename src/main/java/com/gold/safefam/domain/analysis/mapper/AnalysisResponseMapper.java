@@ -7,6 +7,7 @@ import com.gold.safefam.domain.analysis.dto.AnalysisResponse.RecommendedAction;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.ScoreBreakdown;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.UrlThreat;
 import com.gold.safefam.domain.analysis.enums.AnalysisStatus;
+import com.gold.safefam.domain.analysis.enums.IndicatorType;
 import com.gold.safefam.domain.analysis.entity.Analysis;
 import com.gold.safefam.domain.analysis.model.MessageRiskAnalysisResult;
 import com.gold.safefam.domain.analysis.service.AnalysisResultFactory;
@@ -20,6 +21,9 @@ import java.util.List;
  */
 @Component
 public class AnalysisResponseMapper {
+
+    private static final String FAILED_TRACK_PREFIX =
+            "Analysis track unavailable: ";
 
     private final AnalysisResultFactory resultFactory;
 
@@ -60,6 +64,19 @@ public class AnalysisResponseMapper {
                         .toList()
                         : List.of();
 
+        List<String> failedTracks = analysis.getIndicators().stream()
+                .filter(indicator -> indicator.getType()
+                        == IndicatorType.ANALYSIS_TRACK_FAILURE)
+                .map(indicator -> indicator.getDescription())
+                .filter(description -> description != null
+                        && description.startsWith(FAILED_TRACK_PREFIX))
+                .map(description -> description.substring(
+                        FAILED_TRACK_PREFIX.length()
+                ))
+                .filter(description -> !description.isBlank())
+                .distinct()
+                .toList();
+
         return new AnalysisResponse(
                 analysis.getId(),
                 analysis.getStatus(),
@@ -68,6 +85,7 @@ public class AnalysisResponseMapper {
                 analysis.getCategory(),
                 analysis.getExplanation(),
                 analysis.getFailureCode(),
+                failedTracks,
                 new ScoreBreakdown(
                         analysis.getLlmScore(),
                         analysis.getUrlScore(),

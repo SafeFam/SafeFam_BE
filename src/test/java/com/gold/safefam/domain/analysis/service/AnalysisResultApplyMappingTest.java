@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -89,6 +90,21 @@ class AnalysisResultApplyMappingTest {
                                 == IndicatorType.ANALYSIS_TRACK_FAILURE)
                         .count()
         );
+    }
+
+    @Test
+    void mapsOfficialContactMismatchToImpersonationIndicator() {
+        Analysis analysis = pending();
+        prepareNewEvent(analysis);
+
+        service.apply(
+                AnalysisResultEventFixture.institutionContactMismatch()
+        );
+
+        assertTrue(analysis.getIndicators().stream()
+                .anyMatch(indicator -> indicator.getType()
+                        == IndicatorType.IMPERSONATION
+                        && indicator.getDescription().contains("KB국민은행")));
     }
 
     @Test
