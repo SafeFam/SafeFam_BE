@@ -75,7 +75,9 @@ public record AnalysisResultEvent(
         public record RuleAnalysis(
                 Integer score,
                 List<String> matchedRules,
-                boolean maliciousDomainPattern
+                boolean maliciousDomainPattern,
+                boolean institutionContactMismatch,
+                List<String> mentionedInstitutions
         ) {
         }
     }

@@ -144,6 +144,7 @@ public class AnalysisResultApplyService {
         addFailedTrackIndicators(analysis, payload);
         addUrlResult(analysis, payload);
         addRuleIndicators(analysis, payload);
+        addOfficialInstitutionVerification(analysis, payload);
     }
 
     /* 분석 실패 결과 엔티티 반영 */
@@ -293,6 +294,37 @@ public class AnalysisResultApplyService {
                     "Malicious domain pattern detected"
             ));
         }
+
+    }
+
+    private void addOfficialInstitutionVerification(
+            Analysis analysis,
+            AnalysisResultEvent.Payload payload
+    ) {
+        AnalysisResultEvent.Payload.RuleAnalysis ruleAnalysis =
+                payload.ruleAnalysis();
+
+        if (ruleAnalysis == null
+                || !ruleAnalysis.institutionContactMismatch()) {
+            return;
+        }
+
+        String institutions = safeList(
+                ruleAnalysis.mentionedInstitutions()
+        ).stream()
+                .filter(this::hasText)
+                .limit(3)
+                .collect(java.util.stream.Collectors.joining(", "));
+
+        String description = institutions.isBlank()
+                ? "언급된 기관의 공식 홈페이지 또는 대표번호와 일치하지 않습니다."
+                : institutions
+                + "의 공식 홈페이지 또는 대표번호와 일치하지 않습니다.";
+
+        analysis.addIndicator(new AnalysisIndicator(
+                IndicatorType.IMPERSONATION,
+                truncate(description, 500)
+        ));
     }
 
     private String findExplanation(

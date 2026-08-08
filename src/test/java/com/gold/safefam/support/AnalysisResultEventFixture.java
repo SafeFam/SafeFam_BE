@@ -38,6 +38,31 @@ public final class AnalysisResultEventFixture {
         );
     }
 
+    public static AnalysisResultEvent institutionContactMismatch() {
+        AnalysisResultEvent.Payload base = successfulPayload(List.of());
+        return event(
+                AnalysisEventType.ANALYSIS_COMPLETED,
+                new AnalysisResultEvent.Payload(
+                        base.finalScore(),
+                        base.riskGrade(),
+                        base.phishingType(),
+                        base.rawScores(),
+                        base.weightedContributions(),
+                        base.textAnalysis(),
+                        base.urlAnalysis(),
+                        new AnalysisResultEvent.Payload.RuleAnalysis(
+                                80,
+                                List.of("공식 연락처 교차검증 불일치"),
+                                false,
+                                true,
+                                List.of("KB국민은행")
+                        ),
+                        base.failedTracks(),
+                        base.failureCode()
+                )
+        );
+    }
+
     public static AnalysisResultEvent event(
             AnalysisEventType eventType,
             AnalysisResultEvent.Payload payload
@@ -86,7 +111,9 @@ public final class AnalysisResultEventFixture {
                 new AnalysisResultEvent.Payload.RuleAnalysis(
                         80,
                         List.of("URGENT_TRANSFER"),
-                        true
+                        true,
+                        false,
+                        List.of()
                 ),
                 failedTracks,
                 null

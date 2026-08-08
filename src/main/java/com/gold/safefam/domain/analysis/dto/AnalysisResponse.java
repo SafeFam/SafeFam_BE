@@ -39,6 +39,12 @@ public record AnalysisResponse(
         )
         String failureCode,
 
+        @Schema(
+                description = "부분 분석에서 사용할 수 없었던 분석 계층",
+                example = "[\"URL:VIRUSTOTAL\", \"TEXT:GEMINI\"]"
+        )
+        List<String> failedTracks,
+
         ScoreBreakdown scoreBreakdown,
 
         List<Indicator> indicators,
