@@ -11,8 +11,6 @@ import java.util.List;
 
 @Schema(description = "분석 결과 기반 멀티턴 챗봇 요청")
 public record ChatRequest(
-        @NotNull
-        @Positive
         @Schema(description = "상담 컨텍스트로 사용할 본인 소유 분석 ID", example = "101")
         Long analysisId,
 

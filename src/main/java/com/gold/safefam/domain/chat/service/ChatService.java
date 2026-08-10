@@ -27,16 +27,21 @@ public class ChatService {
     private final AiChatClient aiChatClient;
 
     public ChatResponse chat(Long userId, ChatRequest request) {
-        Analysis analysis = analysisRepository.findWithIndicatorsByIdAndUserId(
-                        request.analysisId(),
-                        userId
-                )
-                .orElseThrow(() -> new BusinessException(ErrorCode.ANALYSIS_NOT_FOUND));
+        AiChatClient.AnalysisContext analysisContext = null;
 
-        validateChatContext(analysis);
+        if (request.analysisId() != null) {
+            Analysis analysis = analysisRepository.findWithIndicatorsByIdAndUserId(
+                            request.analysisId(),
+                            userId
+                    )
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ANALYSIS_NOT_FOUND));
+
+            validateChatContext(analysis);
+            analysisContext = toAnalysisContext(analysis);
+        }
 
         AiChatClient.AiChatResponse response = aiChatClient.chat(new AiChatRequest(
-                toAnalysisContext(analysis),
+                analysisContext,
                 request.messages().stream()
                         .map(message -> new Message(
                                 message.role().name().toLowerCase(Locale.ROOT),
