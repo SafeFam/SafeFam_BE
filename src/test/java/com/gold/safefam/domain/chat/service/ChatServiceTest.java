@@ -24,8 +24,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -144,5 +143,29 @@ class ChatServiceTest {
                 "긴급한 송금을 요구합니다."
         ));
         return analysis;
+    }
+
+    @Test
+    void chatWithoutAnalysisIdSkipsContextLookup() {
+        AnalysisRepository analysisRepository = mock(AnalysisRepository.class);
+        AiChatClient aiChatClient = mock(AiChatClient.class);
+        ChatService chatService = new ChatService(analysisRepository, aiChatClient);
+
+        when(aiChatClient.chat(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new AiChatResponse("금융감독원 1332에 신고하세요."));
+
+        ChatResponse response = chatService.chat(
+                7L,
+                new ChatRequest(
+                        null,
+                        List.of(new ChatMessage(ChatRole.USER, "피싱 문자 받았어요"))
+                )
+        );
+
+        assertEquals("금융감독원 1332에 신고하세요.", response.message());
+
+        ArgumentCaptor<AiChatRequest> captor = ArgumentCaptor.forClass(AiChatRequest.class);
+        verify(aiChatClient).chat(captor.capture());
+        assertNull(captor.getValue().analysisContext());
     }
 }
