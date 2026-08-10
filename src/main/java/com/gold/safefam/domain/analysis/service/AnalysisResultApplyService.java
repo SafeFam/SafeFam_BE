@@ -220,7 +220,7 @@ public class AnalysisResultApplyService {
         AnalysisResultEvent.Payload.UrlAnalysis url =
                 payload.urlAnalysis();
 
-        if (url == null || !url.hasUrl()) {
+        if (url == null || !Boolean.TRUE.equals(url.hasUrl())) {
             return;
         }
 
@@ -288,7 +288,7 @@ public class AnalysisResultApplyService {
             }
         }
 
-        if (ruleAnalysis.maliciousDomainPattern()) {
+        if (Boolean.TRUE.equals(ruleAnalysis.maliciousDomainPattern())) {
             analysis.addIndicator(new AnalysisIndicator(
                     IndicatorType.MALICIOUS_URL,
                     "Malicious domain pattern detected"
@@ -305,7 +305,7 @@ public class AnalysisResultApplyService {
                 payload.ruleAnalysis();
 
         if (ruleAnalysis == null
-                || !ruleAnalysis.institutionContactMismatch()) {
+                || !Boolean.TRUE.equals(ruleAnalysis.institutionContactMismatch())) {
             return;
         }
 
