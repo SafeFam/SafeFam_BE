@@ -114,6 +114,20 @@ public class FamilyService {
         return analysisService.getAnalyses(wardId, page, size, null, null, null, null);
     }
 
+    // ─── 관계 설정 (보호자) ────────────────────────────────────────
+
+    @Transactional
+    public void updateRelationship(Long protectorId, Long linkId, String relationship) {
+        FamilyLink link = familyLinkRepository.findById(linkId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FAMILY_LINK_NOT_FOUND));
+
+        if (!link.getProtector().getId().equals(protectorId)) {
+            throw new BusinessException(ErrorCode.FAMILY_LINK_FORBIDDEN);
+        }
+
+        link.updateRelationship(relationship);
+    }
+
     // ─── private ───────────────────────────────────────────────
 
     private void validateAndAccept(FamilyLink link, Long wardId) {

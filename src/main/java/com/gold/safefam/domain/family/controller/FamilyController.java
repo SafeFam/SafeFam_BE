@@ -1,10 +1,7 @@
 package com.gold.safefam.domain.family.controller;
 
 import com.gold.safefam.domain.analysis.dto.AnalysisListItemResponse;
-import com.gold.safefam.domain.family.dto.FamilyInviteResponse;
-import com.gold.safefam.domain.family.dto.FamilyLinkByCodeRequest;
-import com.gold.safefam.domain.family.dto.FamilyLinkByQrRequest;
-import com.gold.safefam.domain.family.dto.FamilyMemberResponse;
+import com.gold.safefam.domain.family.dto.*;
 import com.gold.safefam.domain.family.service.FamilyService;
 import com.gold.safefam.global.response.ApiResponse;
 import com.gold.safefam.global.response.PageResponse;
@@ -90,5 +87,16 @@ public class FamilyController {
     ) {
         PageResponse<AnalysisListItemResponse> logs = familyService.getWardLogs(protectorId, wardId, page, size);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "피보호자 탐지 이력을 조회했습니다.", logs));
+    }
+
+    @Operation(summary = "관계 설정", description = "보호자가 피보호자 관계를 설정합니다.")
+    @PatchMapping("/{linkId}")
+    public ResponseEntity<ApiResponse<Void>> updateRelationship(
+            @AuthenticationPrincipal Long protectorId,
+            @PathVariable Long linkId,
+            @Valid @RequestBody FamilyUpdateRelationshipRequest request
+    ) {
+        familyService.updateRelationship(protectorId, linkId, request.relationship());
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "관계가 설정되었습니다.", null));
     }
 }

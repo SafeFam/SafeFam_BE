@@ -46,6 +46,13 @@ public class FamilyLink {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "relationship", length = 20)
+    private String relationship;
+
+    public void updateRelationship(String relationship) {
+        this.relationship = relationship;
+    }
+
     public static FamilyLink createInvite(User protector, String inviteCode, String qrToken, OffsetDateTime expiresAt) {
         FamilyLink link = new FamilyLink();
         link.protector = protector;
