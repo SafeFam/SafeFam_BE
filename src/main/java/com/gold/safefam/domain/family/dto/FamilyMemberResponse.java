@@ -10,7 +10,9 @@ import java.time.OffsetDateTime;
 public record FamilyMemberResponse(
         Long linkId,
         Long wardId,
+        String wardNickname,
         String wardPhone,
+        String relationship,
         FamilyLinkStatus status,
         OffsetDateTime linkedAt
 ) {
@@ -18,7 +20,9 @@ public record FamilyMemberResponse(
         return new FamilyMemberResponse(
                 link.getId(),
                 link.getWard() != null ? link.getWard().getId() : null,
+                link.getWard() != null ? link.getWard().getNickname() : null,
                 link.getWard() != null ? link.getWard().getPhoneNumber() : null,
+                link.getRelationship(),
                 link.getStatus(),
                 link.getLinkedAt()
         );
