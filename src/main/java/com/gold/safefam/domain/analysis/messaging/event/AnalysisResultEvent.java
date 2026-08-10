@@ -61,7 +61,7 @@ public record AnalysisResultEvent(
 
         // URL 검사 상세 분석 정보
         public record UrlAnalysis(
-                boolean hasUrl,
+                Boolean hasUrl,
                 String originalUrl,
                 String tracedUrl,
                 Boolean malicious,
@@ -75,8 +75,8 @@ public record AnalysisResultEvent(
         public record RuleAnalysis(
                 Integer score,
                 List<String> matchedRules,
-                boolean maliciousDomainPattern,
-                boolean institutionContactMismatch,
+                Boolean maliciousDomainPattern,
+                Boolean institutionContactMismatch,
                 List<String> mentionedInstitutions
         ) {
         }
