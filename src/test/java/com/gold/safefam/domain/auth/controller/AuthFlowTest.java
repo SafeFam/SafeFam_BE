@@ -3,6 +3,7 @@ package com.gold.safefam.domain.auth.controller;
 import com.gold.safefam.domain.auth.repository.RefreshTokenRepository;
 import com.gold.safefam.domain.user.entity.User;
 import com.gold.safefam.domain.user.repository.UserRepository;
+import com.gold.safefam.global.security.TokenBlacklistService;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -39,6 +41,14 @@ class AuthFlowTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    /*
+     * 이 통합 테스트는 refresh token의 회전과 무효화를 검증합니다.
+     * Access token blacklist 저장소인 Redis는 외부 인프라이므로 mock으로
+     * 격리해 로컬 Redis 실행 여부가 인증 흐름 테스트에 영향을 주지 않게 합니다.
+     */
+    @MockitoBean
+    private TokenBlacklistService tokenBlacklistService;
 
     private MockMvc mockMvc;
 
