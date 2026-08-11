@@ -86,11 +86,11 @@ class AnalysisResponseMapperTest {
         );
         analysis.addIndicator(new AnalysisIndicator(
                 IndicatorType.ANALYSIS_TRACK_FAILURE,
-                "Analysis track unavailable: TEXT:GEMINI"
+                "Analysis track unavailable: TEXT:LLM"
         ));
 
         AnalysisResponse response = mapper.toResponse(analysis);
 
-        assertEquals(List.of("TEXT:GEMINI"), response.failedTracks());
+        assertEquals(List.of("TEXT:LLM"), response.failedTracks());
     }
 }
