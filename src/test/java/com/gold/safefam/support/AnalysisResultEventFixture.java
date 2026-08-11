@@ -92,12 +92,18 @@ public final class AnalysisResultEventFixture {
                         50, 20, 12
                 ),
                 new AnalysisResultEvent.Payload.TextAnalysis(
-                        "NAIVE_BAYES_GEMINI",
+                        "STACKING_GEMINI",
                         90,
                         "HIGH",
                         "Suspicious payment request",
                         List.of("Urgent transfer request"),
-                        List.of()
+                        List.of(),
+                        70,
+                        0.72,
+                        true,
+                        "GEMINI",
+                        "UNCERTAIN_SELF_MODEL_PREDICTION",
+                        false
                 ),
                 new AnalysisResultEvent.Payload.UrlAnalysis(
                         true,
