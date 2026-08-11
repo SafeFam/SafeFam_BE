@@ -17,6 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class AnalysisResultConsumerTest {
 
@@ -43,6 +44,29 @@ class AnalysisResultConsumerTest {
 
         verify(channel).basicAck(11L, false);
         verify(channel, never()).basicReject(11L, false);
+    }
+
+    @Test
+    void deserializesHybridTextAnalysisFields() throws Exception {
+        AnalysisResultEvent expected = AnalysisResultEventFixture.completed();
+
+        AnalysisResultEvent restored = objectMapper.readValue(
+                objectMapper.writeValueAsBytes(expected),
+                AnalysisResultEvent.class
+        );
+
+        AnalysisResultEvent.Payload.TextAnalysis text =
+                restored.payload().textAnalysis();
+
+        assertThat(text.method()).isEqualTo("STACKING_GEMINI");
+        assertThat(text.selfModelScore()).isEqualTo(70);
+        assertThat(text.selfModelConfidence()).isEqualTo(0.72);
+        assertThat(text.geminiCalled()).isTrue();
+        assertThat(text.decisionSource()).isEqualTo("GEMINI");
+        assertThat(text.routingReason()).isEqualTo(
+                "UNCERTAIN_SELF_MODEL_PREDICTION"
+        );
+        assertThat(text.fallbackApplied()).isFalse();
     }
 
     @Test

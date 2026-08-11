@@ -55,7 +55,13 @@ public record AnalysisResultEvent(
                 String grade,
                 String reason,
                 List<String> evidence,
-                List<String> failedEngines
+                List<String> failedEngines,
+                Integer selfModelScore,
+                Double selfModelConfidence,
+                Boolean geminiCalled,
+                String decisionSource,
+                String routingReason,
+                Boolean fallbackApplied
         ) {
         }
 
