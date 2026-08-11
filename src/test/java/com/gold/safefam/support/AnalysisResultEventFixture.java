@@ -92,7 +92,7 @@ public final class AnalysisResultEventFixture {
                         50, 20, 12
                 ),
                 new AnalysisResultEvent.Payload.TextAnalysis(
-                        "STACKING_GEMINI",
+                        "STACKING_LLM",
                         90,
                         "HIGH",
                         "Suspicious payment request",
@@ -101,7 +101,10 @@ public final class AnalysisResultEventFixture {
                         70,
                         0.72,
                         true,
-                        "GEMINI",
+                        "AWS_BEDROCK",
+                        "anthropic.claude-haiku-4-5-20251001-v1:0",
+                        true,
+                        "LLM",
                         "UNCERTAIN_SELF_MODEL_PREDICTION",
                         false
                 ),

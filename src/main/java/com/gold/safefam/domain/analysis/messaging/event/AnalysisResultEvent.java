@@ -58,11 +58,26 @@ public record AnalysisResultEvent(
                 List<String> failedEngines,
                 Integer selfModelScore,
                 Double selfModelConfidence,
+                Boolean llmCalled,
+                String llmProvider,
+                String llmModel,
                 Boolean geminiCalled,
                 String decisionSource,
                 String routingReason,
                 Boolean fallbackApplied
         ) {
+            /**
+             * 신규 공급자 중립 필드가 없으면 기존 Gemini 필드로 대체합니다.
+             * SafeFam_AI와 SafeFam_BE를 순차 배포하는 동안 구·신규 이벤트를
+             * 모두 처리하기 위한 임시 하위 호환 로직입니다.
+             */
+            public boolean resolvedLlmCalled() {
+                if (llmCalled != null) {
+                    return llmCalled;
+                }
+
+                return Boolean.TRUE.equals(geminiCalled);
+            }
         }
 
         // URL 검사 상세 분석 정보

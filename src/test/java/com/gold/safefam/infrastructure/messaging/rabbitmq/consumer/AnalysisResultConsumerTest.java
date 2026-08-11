@@ -48,7 +48,8 @@ class AnalysisResultConsumerTest {
 
     @Test
     void deserializesHybridTextAnalysisFields() throws Exception {
-        AnalysisResultEvent expected = AnalysisResultEventFixture.completed();
+        AnalysisResultEvent expected =
+                AnalysisResultEventFixture.completed();
 
         AnalysisResultEvent restored = objectMapper.readValue(
                 objectMapper.writeValueAsBytes(expected),
@@ -58,15 +59,42 @@ class AnalysisResultConsumerTest {
         AnalysisResultEvent.Payload.TextAnalysis text =
                 restored.payload().textAnalysis();
 
-        assertThat(text.method()).isEqualTo("STACKING_GEMINI");
-        assertThat(text.selfModelScore()).isEqualTo(70);
-        assertThat(text.selfModelConfidence()).isEqualTo(0.72);
-        assertThat(text.geminiCalled()).isTrue();
-        assertThat(text.decisionSource()).isEqualTo("GEMINI");
-        assertThat(text.routingReason()).isEqualTo(
-                "UNCERTAIN_SELF_MODEL_PREDICTION"
-        );
-        assertThat(text.fallbackApplied()).isFalse();
+        assertThat(text.method())
+                .isEqualTo("STACKING_LLM");
+
+        assertThat(text.selfModelScore())
+                .isEqualTo(70);
+
+        assertThat(text.selfModelConfidence())
+                .isEqualTo(0.72);
+
+        assertThat(text.llmCalled())
+                .isTrue();
+
+        assertThat(text.llmProvider())
+                .isEqualTo("AWS_BEDROCK");
+
+        assertThat(text.llmModel())
+                .isEqualTo(
+                        "anthropic.claude-haiku-4-5-20251001-v1:0"
+                );
+
+        assertThat(text.resolvedLlmCalled())
+                .isTrue();
+
+        assertThat(text.geminiCalled())
+                .isTrue();
+
+        assertThat(text.decisionSource())
+                .isEqualTo("LLM");
+
+        assertThat(text.routingReason())
+                .isEqualTo(
+                        "UNCERTAIN_SELF_MODEL_PREDICTION"
+                );
+
+        assertThat(text.fallbackApplied())
+                .isFalse();
     }
 
     @Test
@@ -137,5 +165,87 @@ class AnalysisResultConsumerTest {
                 .withBody(objectMapper.writeValueAsBytes(event))
                 .setDeliveryTag(deliveryTag)
                 .build();
+    }
+
+    @Test
+    void fallsBackToLegacyGeminiCalledField() throws Exception {
+        String legacyJson = """
+            {
+              "method": "STACKING_GEMINI",
+              "score": 85,
+              "grade": "DANGEROUS",
+              "reason": "기관 사칭이 감지되었습니다.",
+              "evidence": [],
+              "failedEngines": [],
+              "selfModelScore": 60,
+              "selfModelConfidence": 0.72,
+              "geminiCalled": true,
+              "decisionSource": "GEMINI",
+              "routingReason": "UNCERTAIN_SELF_MODEL_PREDICTION",
+              "fallbackApplied": false
+            }
+            """;
+
+        AnalysisResultEvent.Payload.TextAnalysis text =
+                objectMapper.readValue(
+                        legacyJson,
+                        AnalysisResultEvent.Payload.TextAnalysis.class
+                );
+
+        assertThat(text.llmCalled())
+                .isNull();
+
+        assertThat(text.llmProvider())
+                .isNull();
+
+        assertThat(text.llmModel())
+                .isNull();
+
+        assertThat(text.geminiCalled())
+                .isTrue();
+
+        assertThat(text.resolvedLlmCalled())
+                .isTrue();
+    }
+
+    @Test
+    void acceptsProviderNeutralLlmFieldsWithoutLegacyAlias()
+            throws Exception {
+        String newJson = """
+            {
+              "method": "STACKING_LLM",
+              "score": 85,
+              "grade": "DANGEROUS",
+              "reason": "기관 사칭이 감지되었습니다.",
+              "evidence": [],
+              "failedEngines": [],
+              "selfModelScore": 60,
+              "selfModelConfidence": 0.72,
+              "llmCalled": true,
+              "llmProvider": "AWS_BEDROCK",
+              "llmModel": "anthropic.claude-haiku-4-5-20251001-v1:0",
+              "decisionSource": "LLM",
+              "routingReason": "UNCERTAIN_SELF_MODEL_PREDICTION",
+              "fallbackApplied": false
+            }
+            """;
+
+        AnalysisResultEvent.Payload.TextAnalysis text =
+                objectMapper.readValue(
+                        newJson,
+                        AnalysisResultEvent.Payload.TextAnalysis.class
+                );
+
+        assertThat(text.llmCalled())
+                .isTrue();
+
+        assertThat(text.llmProvider())
+                .isEqualTo("AWS_BEDROCK");
+
+        assertThat(text.geminiCalled())
+                .isNull();
+
+        assertThat(text.resolvedLlmCalled())
+                .isTrue();
     }
 }
