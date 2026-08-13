@@ -98,6 +98,61 @@ class AnalysisResultConsumerTest {
     }
 
     @Test
+    void deserializesInstitutionMatchDetail() throws Exception {
+        String json = """
+            {
+              "score": 65,
+              "matchedRules": ["기관명-공식 도메인 불일치"],
+              "maliciousDomainPattern": false,
+              "institutionMatch": {
+                "checked": true,
+                "mismatch": true,
+                "institution": "KB국민은행",
+                "officialDomains": ["kbstar.com"],
+                "textDomain": "fake-kb.example"
+              }
+            }
+            """;
+
+        AnalysisResultEvent.Payload.RuleAnalysis ruleAnalysis =
+                objectMapper.readValue(
+                        json,
+                        AnalysisResultEvent.Payload.RuleAnalysis.class
+                );
+
+        AnalysisResultEvent.Payload.InstitutionMatch institutionMatch =
+                ruleAnalysis.institutionMatch();
+
+        assertThat(institutionMatch.checked()).isTrue();
+        assertThat(institutionMatch.mismatch()).isTrue();
+        assertThat(institutionMatch.institution())
+                .isEqualTo("KB국민은행");
+        assertThat(institutionMatch.officialDomains())
+                .containsExactly("kbstar.com");
+        assertThat(institutionMatch.textDomain())
+                .isEqualTo("fake-kb.example");
+    }
+
+    @Test
+    void acceptsRuleAnalysisWithoutInstitutionMatch() throws Exception {
+        String json = """
+            {
+              "score": 0,
+              "matchedRules": [],
+              "maliciousDomainPattern": false
+            }
+            """;
+
+        AnalysisResultEvent.Payload.RuleAnalysis ruleAnalysis =
+                objectMapper.readValue(
+                        json,
+                        AnalysisResultEvent.Payload.RuleAnalysis.class
+                );
+
+        assertThat(ruleAnalysis.institutionMatch()).isNull();
+    }
+
+    @Test
     void acknowledgesDuplicateEvent() throws Exception {
         AnalysisResultEvent event = AnalysisResultEventFixture.completed();
         when(applyService.apply(event))

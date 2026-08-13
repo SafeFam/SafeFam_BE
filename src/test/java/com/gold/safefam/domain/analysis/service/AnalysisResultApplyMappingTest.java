@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -93,18 +94,34 @@ class AnalysisResultApplyMappingTest {
     }
 
     @Test
-    void mapsOfficialContactMismatchToImpersonationIndicator() {
+    void mapsInstitutionDomainMismatchToImpersonationIndicator() {
         Analysis analysis = pending();
         prepareNewEvent(analysis);
 
         service.apply(
-                AnalysisResultEventFixture.institutionContactMismatch()
+                AnalysisResultEventFixture.institutionDomainMismatch()
         );
 
         assertTrue(analysis.getIndicators().stream()
                 .anyMatch(indicator -> indicator.getType()
                         == IndicatorType.IMPERSONATION
-                        && indicator.getDescription().contains("KB국민은행")));
+                        && indicator.getDescription().contains("KB국민은행")
+                        && indicator.getDescription().contains("fake-kb.example")
+                        && indicator.getDescription().contains("kbstar.com")));
+    }
+
+    @Test
+    void doesNotMapSkippedInstitutionComparisonToImpersonationIndicator() {
+        Analysis analysis = pending();
+        prepareNewEvent(analysis);
+
+        service.apply(
+                AnalysisResultEventFixture.institutionComparisonSkipped()
+        );
+
+        assertFalse(analysis.getIndicators().stream()
+                .anyMatch(indicator -> indicator.getType()
+                        == IndicatorType.IMPERSONATION));
     }
 
     @Test
