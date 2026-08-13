@@ -304,22 +304,37 @@ public class AnalysisResultApplyService {
         AnalysisResultEvent.Payload.RuleAnalysis ruleAnalysis =
                 payload.ruleAnalysis();
 
-        if (ruleAnalysis == null
-                || !Boolean.TRUE.equals(ruleAnalysis.institutionContactMismatch())) {
+        AnalysisResultEvent.Payload.InstitutionMatch institutionMatch =
+                ruleAnalysis == null
+                        ? null
+                        : ruleAnalysis.institutionMatch();
+
+        if (institutionMatch == null
+                || !Boolean.TRUE.equals(institutionMatch.checked())
+                || !Boolean.TRUE.equals(institutionMatch.mismatch())) {
             return;
         }
 
-        String institutions = safeList(
-                ruleAnalysis.mentionedInstitutions()
+        String officialDomains = safeList(
+                institutionMatch.officialDomains()
         ).stream()
                 .filter(this::hasText)
                 .limit(3)
                 .collect(java.util.stream.Collectors.joining(", "));
 
-        String description = institutions.isBlank()
-                ? "언급된 기관의 공식 홈페이지 또는 대표번호와 일치하지 않습니다."
-                : institutions
-                + "의 공식 홈페이지 또는 대표번호와 일치하지 않습니다.";
+        String institution = hasText(institutionMatch.institution())
+                ? institutionMatch.institution()
+                : "언급된 기관";
+        String textDomain = hasText(institutionMatch.textDomain())
+                ? institutionMatch.textDomain()
+                : "확인된 링크 도메인";
+
+        String description = officialDomains.isBlank()
+                ? institution + " 명의의 링크 도메인(" + textDomain
+                + ")이 공식 도메인과 일치하지 않습니다."
+                : institution + " 명의의 링크 도메인(" + textDomain
+                + ")이 공식 도메인(" + officialDomains
+                + ")과 일치하지 않습니다.";
 
         analysis.addIndicator(new AnalysisIndicator(
                 IndicatorType.IMPERSONATION,

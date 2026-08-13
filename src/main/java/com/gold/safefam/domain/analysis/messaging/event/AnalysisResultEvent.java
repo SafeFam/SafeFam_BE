@@ -97,8 +97,17 @@ public record AnalysisResultEvent(
                 Integer score,
                 List<String> matchedRules,
                 Boolean maliciousDomainPattern,
-                Boolean institutionContactMismatch,
-                List<String> mentionedInstitutions
+                InstitutionMatch institutionMatch
+        ) {
+        }
+
+        // 문자 발신 태그의 기관명과 링크 도메인 간 공식 정보 대조 결과
+        public record InstitutionMatch(
+                Boolean checked,
+                Boolean mismatch,
+                String institution,
+                List<String> officialDomains,
+                String textDomain
         ) {
         }
     }
