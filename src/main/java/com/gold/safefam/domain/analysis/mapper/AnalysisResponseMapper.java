@@ -2,6 +2,7 @@ package com.gold.safefam.domain.analysis.mapper;
 
 import com.gold.safefam.domain.analysis.dto.AnalysisListItemResponse;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse;
+import com.gold.safefam.domain.analysis.dto.AnalysisResponse.EvidenceCard;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.Indicator;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.RecommendedAction;
 import com.gold.safefam.domain.analysis.dto.AnalysisResponse.ScoreBreakdown;
@@ -38,6 +39,15 @@ public class AnalysisResponseMapper {
                         .map(indicator -> new Indicator(
                                 indicator.getType(),
                                 indicator.getDescription()
+                        ))
+                        .toList();
+
+        List<EvidenceCard> evidenceCards =
+                analysis.getEvidenceCards().stream()
+                        .map(card -> new EvidenceCard(
+                                card.getCategory(),
+                                card.getTitle(),
+                                card.getDescription()
                         ))
                         .toList();
 
@@ -87,10 +97,20 @@ public class AnalysisResponseMapper {
                 analysis.getFailureCode(),
                 failedTracks,
                 new ScoreBreakdown(
-                        analysis.getLlmScore(),
-                        analysis.getUrlScore(),
-                        analysis.getPatternScore()
+                        rawScoreOrLegacyValue(
+                                analysis.getRawTextScore(),
+                                analysis.getLlmScore()
+                        ),
+                        rawScoreOrLegacyValue(
+                                analysis.getRawUrlScore(),
+                                analysis.getUrlScore()
+                        ),
+                        rawScoreOrLegacyValue(
+                                analysis.getRawRulesScore(),
+                                analysis.getPatternScore()
+                        )
                 ),
+                evidenceCards,
                 indicators,
                 urls,
                 actions,
@@ -143,5 +163,12 @@ public class AnalysisResponseMapper {
     ) {
         return status == AnalysisStatus.COMPLETED
                 || status == AnalysisStatus.PARTIAL_SUCCESS;
+    }
+
+    private Integer rawScoreOrLegacyValue(
+            Integer rawScore,
+            Integer legacyValue
+    ) {
+        return rawScore != null ? rawScore : legacyValue;
     }
 }

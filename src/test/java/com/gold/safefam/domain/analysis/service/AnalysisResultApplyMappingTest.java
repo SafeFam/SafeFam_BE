@@ -67,6 +67,15 @@ class AnalysisResultApplyMappingTest {
         assertEquals(82, analysis.getTotalScore());
         assertEquals(RiskLevel.HIGH, analysis.getRiskLevel());
         assertEquals(1, analysis.getUrlRisks().size());
+        assertEquals(2, analysis.getEvidenceCards().size());
+        assertEquals(
+                "DANGEROUS_URL",
+                analysis.getEvidenceCards().get(0).getCategory()
+        );
+        assertEquals(
+                "위험 URL",
+                analysis.getEvidenceCards().get(0).getTitle()
+        );
         assertEquals(4, analysis.getIndicators().size());
         verify(eventPublisher).publishEvent(
                 any(AnalysisResultCommittedEvent.class)

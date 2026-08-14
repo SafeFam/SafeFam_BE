@@ -153,6 +153,29 @@ class AnalysisResultConsumerTest {
     }
 
     @Test
+    void deserializesEvidenceCards() throws Exception {
+        String json = """
+            {
+              "category": "INSTITUTION_IMPERSONATION",
+              "title": "기관 사칭",
+              "description": "국민은행을 언급했지만 공식 도메인이 아닙니다."
+            }
+            """;
+
+        AnalysisResultEvent.Payload.EvidenceCard card =
+                objectMapper.readValue(
+                        json,
+                        AnalysisResultEvent.Payload.EvidenceCard.class
+                );
+
+        assertThat(card.category())
+                .isEqualTo("INSTITUTION_IMPERSONATION");
+        assertThat(card.title()).isEqualTo("기관 사칭");
+        assertThat(card.description())
+                .isEqualTo("국민은행을 언급했지만 공식 도메인이 아닙니다.");
+    }
+
+    @Test
     void acknowledgesDuplicateEvent() throws Exception {
         AnalysisResultEvent event = AnalysisResultEventFixture.completed();
         when(applyService.apply(event))

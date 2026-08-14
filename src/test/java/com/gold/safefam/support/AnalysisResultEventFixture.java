@@ -33,6 +33,7 @@ public final class AnalysisResultEventFixture {
                 new AnalysisResultEvent.Payload(
                         null, null, null, null, null,
                         null, null, null,
+                        null,
                         List.of("PIPELINE"), "PIPELINE_ERROR"
                 )
         );
@@ -62,6 +63,7 @@ public final class AnalysisResultEventFixture {
                                         "fake-kb.example"
                                 )
                         ),
+                        base.evidenceCards(),
                         base.failedTracks(),
                         base.failureCode()
                 )
@@ -92,6 +94,7 @@ public final class AnalysisResultEventFixture {
                                         null
                                 )
                         ),
+                        base.evidenceCards(),
                         base.failedTracks(),
                         base.failureCode()
                 )
@@ -157,6 +160,18 @@ public final class AnalysisResultEventFixture {
                         List.of("URGENT_TRANSFER"),
                         true,
                         null
+                ),
+                List.of(
+                        new AnalysisResultEvent.Payload.EvidenceCard(
+                                "DANGEROUS_URL",
+                                "위험 URL",
+                                "문자에 포함된 링크가 위험한 것으로 확인됐습니다."
+                        ),
+                        new AnalysisResultEvent.Payload.EvidenceCard(
+                                "URGENCY_PRESSURE",
+                                "행동 압박",
+                                "빠른 판단을 재촉하는 표현이 있습니다."
+                        )
                 ),
                 failedTracks,
                 null

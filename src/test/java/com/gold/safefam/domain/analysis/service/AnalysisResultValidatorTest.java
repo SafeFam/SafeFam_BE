@@ -9,6 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class AnalysisResultValidatorTest {
 
@@ -84,7 +85,8 @@ class AnalysisResultValidatorTest {
         AnalysisResultEvent.Payload payload =
                 new AnalysisResultEvent.Payload(
                         null, null, null, null, null,
-                        null, null, null, List.of("PIPELINE"), null
+                        null, null, null, null,
+                        List.of("PIPELINE"), null
                 );
 
         assertThrows(
@@ -109,7 +111,8 @@ class AnalysisResultValidatorTest {
                         valid.rawScores(),
                         valid.weightedContributions(),
                         valid.textAnalysis(), valid.urlAnalysis(),
-                        valid.ruleAnalysis(), valid.failedTracks(),
+                        valid.ruleAnalysis(), valid.evidenceCards(),
+                        valid.failedTracks(),
                         valid.failureCode()
                 );
 
@@ -123,5 +126,32 @@ class AnalysisResultValidatorTest {
                         )
                 )
         );
+    }
+
+    @Test
+    void acceptsLegacySuccessfulEventWithoutEvidenceCards() {
+        AnalysisResultEvent.Payload current =
+                AnalysisResultEventFixture.successfulPayload(List.of());
+        AnalysisResultEvent.Payload legacy =
+                new AnalysisResultEvent.Payload(
+                        current.finalScore(),
+                        current.riskGrade(),
+                        current.phishingType(),
+                        current.rawScores(),
+                        current.weightedContributions(),
+                        current.textAnalysis(),
+                        current.urlAnalysis(),
+                        current.ruleAnalysis(),
+                        null,
+                        current.failedTracks(),
+                        current.failureCode()
+                );
+
+        assertDoesNotThrow(() -> validator.validate(
+                AnalysisResultEventFixture.event(
+                        AnalysisEventType.ANALYSIS_COMPLETED,
+                        legacy
+                )
+        ));
     }
 }
