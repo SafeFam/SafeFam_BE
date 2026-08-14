@@ -38,11 +38,14 @@ class AnalysisResultApplyServiceTest {
                 mock(AnalysisResultValidator.class);
         ApplicationEventPublisher eventPublisher =
                 mock(ApplicationEventPublisher.class);
+        InstitutionSenderCandidateService senderCandidateService =
+                mock(InstitutionSenderCandidateService.class);
         AnalysisResultApplyService service =
                 new AnalysisResultApplyService(
                         analysisRepository,
                         processedEventRepository,
                         validator,
+                        senderCandidateService,
                         eventPublisher
                 );
 

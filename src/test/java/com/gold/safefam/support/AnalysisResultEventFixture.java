@@ -89,8 +89,8 @@ public final class AnalysisResultEventFixture {
                                 new AnalysisResultEvent.Payload.InstitutionMatch(
                                         false,
                                         false,
-                                        null,
-                                        List.of(),
+                                        "국민은행",
+                                        List.of("kbstar.com"),
                                         null
                                 )
                         ),

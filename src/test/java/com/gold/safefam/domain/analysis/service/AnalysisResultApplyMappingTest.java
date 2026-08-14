@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -34,6 +35,7 @@ class AnalysisResultApplyMappingTest {
 
     private AnalysisRepository analysisRepository;
     private ProcessedAnalysisEventRepository processedEventRepository;
+    private InstitutionSenderCandidateService senderCandidateService;
     private ApplicationEventPublisher eventPublisher;
     private AnalysisResultApplyService service;
 
@@ -42,11 +44,14 @@ class AnalysisResultApplyMappingTest {
         analysisRepository = mock(AnalysisRepository.class);
         processedEventRepository =
                 mock(ProcessedAnalysisEventRepository.class);
+        senderCandidateService =
+                mock(InstitutionSenderCandidateService.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
         service = new AnalysisResultApplyService(
                 analysisRepository,
                 processedEventRepository,
                 new AnalysisResultValidator(),
+                senderCandidateService,
                 eventPublisher
         );
     }
@@ -131,6 +136,16 @@ class AnalysisResultApplyMappingTest {
         assertFalse(analysis.getIndicators().stream()
                 .anyMatch(indicator -> indicator.getType()
                         == IndicatorType.IMPERSONATION));
+        verify(senderCandidateService).recordCandidate(
+                eq(analysis.getId()),
+                eq(analysis.getSender()),
+                eq(AnalysisResultEventFixture
+                        .institutionComparisonSkipped()
+                        .payload()
+                        .ruleAnalysis()
+                        .institutionMatch()),
+                any()
+        );
     }
 
     @Test
