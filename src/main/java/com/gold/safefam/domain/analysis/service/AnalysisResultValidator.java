@@ -8,6 +8,7 @@ import java.util.List;
 public class AnalysisResultValidator {
 
     private static final String SUPPORTED_SCHEMA_VERSION = "1.0";
+    private static final int MAX_EVIDENCE_CARDS = 5;
 
     /* 이벤트 유효성 검증 */
     public void validate(AnalysisResultEvent event) {
@@ -139,6 +140,12 @@ public class AnalysisResultValidator {
                     "Failed event must not contain weightedContributions"
             );
         }
+
+        if (!safeList(payload.evidenceCards()).isEmpty()) {
+            throw new InvalidAnalysisResultEventException(
+                    "Failed event must not contain evidenceCards"
+            );
+        }
     }
 
     /* 성공/부분 성공 메시지의 공통 점수 필드 유요성 검증 */
@@ -189,6 +196,64 @@ public class AnalysisResultValidator {
                 "weightedContributions.rules",
                 payload.weightedContributions().rules()
         );
+
+        validateEvidenceCards(payload.evidenceCards());
+    }
+
+    private void validateEvidenceCards(
+            List<AnalysisResultEvent.Payload.EvidenceCard> evidenceCards
+    ) {
+        List<AnalysisResultEvent.Payload.EvidenceCard> cards =
+                safeList(evidenceCards);
+
+        if (cards.size() > MAX_EVIDENCE_CARDS) {
+            throw new InvalidAnalysisResultEventException(
+                    "evidenceCards must contain at most 5 items"
+            );
+        }
+
+        for (int index = 0; index < cards.size(); index++) {
+            AnalysisResultEvent.Payload.EvidenceCard card = cards.get(index);
+            if (card == null) {
+                throw new InvalidAnalysisResultEventException(
+                        "evidenceCards[" + index + "] must not be null"
+                );
+            }
+
+            validateRequiredText(
+                    "evidenceCards[" + index + "].category",
+                    card.category(),
+                    50
+            );
+            validateRequiredText(
+                    "evidenceCards[" + index + "].title",
+                    card.title(),
+                    100
+            );
+            validateRequiredText(
+                    "evidenceCards[" + index + "].description",
+                    card.description(),
+                    500
+            );
+        }
+    }
+
+    private void validateRequiredText(
+            String field,
+            String value,
+            int maximumLength
+    ) {
+        if (!hasText(value)) {
+            throw new InvalidAnalysisResultEventException(
+                    field + " must not be blank"
+            );
+        }
+
+        if (value.length() > maximumLength) {
+            throw new InvalidAnalysisResultEventException(
+                    field + " must be at most " + maximumLength + " characters"
+            );
+        }
     }
 
     /* Null이 아닌 점수 필드의 유효범위 검증 */
@@ -211,7 +276,7 @@ public class AnalysisResultValidator {
         return value != null && !value.isBlank();
     }
 
-    private List<String> safeList(List<String> values) {
+    private <T> List<T> safeList(List<T> values) {
         return values == null ? List.of() : values;
     }
 

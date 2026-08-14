@@ -1,6 +1,7 @@
 package com.gold.safefam.domain.analysis.service;
 
 import com.gold.safefam.domain.analysis.entity.Analysis;
+import com.gold.safefam.domain.analysis.entity.AnalysisEvidenceCard;
 import com.gold.safefam.domain.analysis.entity.AnalysisIndicator;
 import com.gold.safefam.domain.analysis.entity.AnalysisUrlRisk;
 import com.gold.safefam.domain.analysis.enums.AnalysisStatus;
@@ -141,6 +142,7 @@ public class AnalysisResultApplyService {
         );
 
         addTextEvidence(analysis, payload);
+        addEvidenceCards(analysis, payload);
         addFailedTrackIndicators(analysis, payload);
         addUrlResult(analysis, payload);
         addRuleIndicators(analysis, payload);
@@ -210,6 +212,20 @@ public class AnalysisResultApplyService {
                         )
                 ));
             }
+        }
+    }
+
+    private void addEvidenceCards(
+            Analysis analysis,
+            AnalysisResultEvent.Payload payload
+    ) {
+        for (AnalysisResultEvent.Payload.EvidenceCard card
+                : safeList(payload.evidenceCards())) {
+            analysis.addEvidenceCard(new AnalysisEvidenceCard(
+                    card.category(),
+                    card.title(),
+                    card.description()
+            ));
         }
     }
 
@@ -410,7 +426,7 @@ public class AnalysisResultApplyService {
                 .atOffset(ZoneOffset.UTC);
     }
 
-    private List<String> safeList(List<String> values) {
+    private <T> List<T> safeList(List<T> values) {
         return values == null ? List.of() : values;
     }
 

@@ -47,6 +47,8 @@ public record AnalysisResponse(
 
         ScoreBreakdown scoreBreakdown,
 
+        List<EvidenceCard> evidenceCards,
+
         List<Indicator> indicators,
 
         List<UrlThreat> urls,
@@ -55,11 +57,23 @@ public record AnalysisResponse(
 
         OffsetDateTime analyzedAt
 ) {
-    @Schema(description = "탐지 계층별 점수. 현재 규칙 기반 구현에서는 llmScore가 0입니다.")
+    @Schema(description = "분석 출처별 원점수")
     public record ScoreBreakdown(
-            @Schema(example = "0") Integer llmScore,
-            @Schema(example = "100") Integer urlScore,
-            @Schema(example = "85") Integer patternScore
+            @Schema(description = "문자 문맥 분석 점수", example = "88")
+            Integer textScore,
+            @Schema(description = "URL 분석 점수", example = "95")
+            Integer urlScore,
+            @Schema(description = "금융 규칙 분석 점수", example = "80")
+            Integer rulesScore
+    ) {
+    }
+
+    @Schema(description = "사용자 언어로 정리한 위험 근거 카드")
+    public record EvidenceCard(
+            @Schema(example = "INSTITUTION_IMPERSONATION") String category,
+            @Schema(example = "기관 사칭") String title,
+            @Schema(example = "국민은행을 언급했지만 공식 도메인이 아닙니다.")
+            String description
     ) {
     }
 

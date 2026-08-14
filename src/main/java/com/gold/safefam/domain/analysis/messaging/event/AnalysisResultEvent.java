@@ -29,6 +29,7 @@ public record AnalysisResultEvent(
             TextAnalysis textAnalysis,
             UrlAnalysis urlAnalysis,
             RuleAnalysis ruleAnalysis,
+            List<EvidenceCard> evidenceCards,
             List<String> failedTracks,
             String failureCode
     ) {
@@ -108,6 +109,14 @@ public record AnalysisResultEvent(
                 String institution,
                 List<String> officialDomains,
                 String textDomain
+        ) {
+        }
+
+        /** 사용자에게 노출할 구조화된 위험 근거 카드. */
+        public record EvidenceCard(
+                String category,
+                String title,
+                String description
         ) {
         }
     }

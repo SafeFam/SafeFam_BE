@@ -107,6 +107,10 @@ public class Analysis {
 
     @OneToMany(mappedBy = "analysis", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
+    private final List<AnalysisEvidenceCard> evidenceCards = new ArrayList<>();
+
+    @OneToMany(mappedBy = "analysis", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
     private final List<AnalysisUrlRisk> urlRisks = new ArrayList<>();
 
     @OneToMany(mappedBy = "analysis", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -183,6 +187,12 @@ public class Analysis {
     public void addIndicator(AnalysisIndicator indicator) {
         indicator.attachTo(this);
         indicators.add(indicator);
+    }
+
+    /** 사용자 노출용 구조화 근거 카드를 Aggregate에 연결한다. */
+    public void addEvidenceCard(AnalysisEvidenceCard evidenceCard) {
+        evidenceCard.attachTo(this);
+        evidenceCards.add(evidenceCard);
     }
 
     /** URL 위험 결과를 Aggregate에 연결해 Analysis 저장 트랜잭션에 함께 참여시킨다. */
@@ -263,6 +273,7 @@ public class Analysis {
     /* 하위 컬렉션 초기화 메서드 */
     public void clearResultDetails() {
         indicators.clear();
+        evidenceCards.clear();
         urlRisks.clear();
         keywords.clear();
     }
