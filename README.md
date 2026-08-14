@@ -47,6 +47,7 @@ cp .env.example .env
 | `FIREBASE_SERVICE_ACCOUNT_PATH` | Firebase Admin SDK 서비스 계정 JSON 파일 경로 |
 | `AI_CHAT_BASE_URL` | Spring이 호출할 FastAPI 주소 (Compose 기본값 `http://fastapi-ai:8000`) |
 | `AI_CHAT_CONNECT_TIMEOUT` / `AI_CHAT_READ_TIMEOUT` | FastAPI 연결·응답 제한 시간 |
+| `SENDER_CANDIDATE_REVIEW_THRESHOLD` | 기관 발신번호 후보를 사람 검토 대상으로 전환할 관찰 횟수 (기본 3회) |
 
 ### 2. Docker Compose로 전체 실행
 

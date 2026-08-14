@@ -26,17 +26,20 @@ public class AnalysisResultApplyService {
     private final AnalysisRepository analysisRepository;
     private final ProcessedAnalysisEventRepository processedEventRepository;
     private final AnalysisResultValidator validator;
+    private final InstitutionSenderCandidateService senderCandidateService;
     private final ApplicationEventPublisher eventPublisher;
 
     public AnalysisResultApplyService(
             AnalysisRepository analysisRepository,
             ProcessedAnalysisEventRepository processedEventRepository,
             AnalysisResultValidator validator,
+            InstitutionSenderCandidateService senderCandidateService,
             ApplicationEventPublisher eventPublisher
     ) {
         this.analysisRepository = analysisRepository;
         this.processedEventRepository = processedEventRepository;
         this.validator = validator;
+        this.senderCandidateService = senderCandidateService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -147,6 +150,27 @@ public class AnalysisResultApplyService {
         addUrlResult(analysis, payload);
         addRuleIndicators(analysis, payload);
         addOfficialInstitutionVerification(analysis, payload);
+        recordSenderCandidate(analysis, payload, toOffsetDateTime(event));
+    }
+
+    private void recordSenderCandidate(
+            Analysis analysis,
+            AnalysisResultEvent.Payload payload,
+            OffsetDateTime observedAt
+    ) {
+        AnalysisResultEvent.Payload.RuleAnalysis ruleAnalysis =
+                payload.ruleAnalysis();
+        AnalysisResultEvent.Payload.InstitutionMatch institutionMatch =
+                ruleAnalysis == null
+                        ? null
+                        : ruleAnalysis.institutionMatch();
+
+        senderCandidateService.recordCandidate(
+                analysis.getId(),
+                analysis.getSender(),
+                institutionMatch,
+                observedAt
+        );
     }
 
     /* 분석 실패 결과 엔티티 반영 */

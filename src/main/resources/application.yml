@@ -69,6 +69,10 @@ firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
 
 safefam:
+  analysis:
+    sender-candidates:
+      # 후보를 공식 번호로 자동 승인하지 않고 사람 검토 대상으로 올리는 관찰 횟수
+      review-threshold: ${SENDER_CANDIDATE_REVIEW_THRESHOLD:3}
   ai:
     chat:
       base-url: ${AI_CHAT_BASE_URL:http://localhost:8000}
