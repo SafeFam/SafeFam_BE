@@ -187,6 +187,12 @@ public enum ErrorCode {
             "이미 처리가 완료된 가족 안전 대응 건입니다."
     ),
 
+    FAMILY_SAFETY_INVALID_ANALYSIS(
+            HttpStatus.UNPROCESSABLE_CONTENT,
+            "FA009",
+            "안전 대응 건을 생성할 수 없는 분석입니다."
+    ),
+
     CHAT_ANALYSIS_NOT_READY(
             HttpStatus.CONFLICT,
             "CH001",

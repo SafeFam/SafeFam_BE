@@ -159,6 +159,41 @@ class RateLimitFilterTest {
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
+    @Test
+    @DisplayName("POST /family/link/code 제한 횟수 이하 요청은 통과한다")
+    void allowsFamilyLinkRequestsUnderLimit() throws Exception {
+        setUpSecurityContext(5L);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.setRequestURI("/api/v1/family/link/code");
+
+        for (int i = 0; i < 10; i++) {
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            rateLimitFilter.doFilterInternal(request, response, new MockFilterChain());
+            assertThat(response.getStatus()).isEqualTo(200);
+        }
+    }
+
+    @Test
+    @DisplayName("POST /family/link/code 제한 횟수 초과 요청은 429를 반환한다")
+    void blocksFamilyLinkRequestsOverLimit() throws Exception {
+        setUpSecurityContext(6L);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("POST");
+        request.setRequestURI("/api/v1/family/link/code");
+
+        for (int i = 0; i < 10; i++) {
+            rateLimitFilter.doFilterInternal(request, new MockHttpServletResponse(), new MockFilterChain());
+        }
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        rateLimitFilter.doFilterInternal(request, response, new MockFilterChain());
+        assertThat(response.getStatus()).isEqualTo(429);
+        assertThat(response.getContentAsString()).contains("요청 한도를 초과했습니다");
+    }
+
     private void setUpSecurityContext(Long userId) {
         UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(userId, null, List.of());
