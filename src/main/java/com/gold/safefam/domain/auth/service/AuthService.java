@@ -68,6 +68,10 @@ public class AuthService {
         User user = userRepository.findByPhoneNumber(normalizePhoneNumber(request.phoneNumber()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
+        if (user.isDeleted()) {
+            throw new BusinessException(ErrorCode.WITHDRAWN_USER);
+        }
+
         if (user.isLocked()) {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
@@ -111,6 +115,10 @@ public class AuthService {
 
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
+            if (user.isDeleted()) {
+                refreshTokenRepository.delete(storedToken);
+                throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            }
             return issueAndStoreTokens(user);
         } catch (BusinessException exception) {
             throw exception;
@@ -169,6 +177,9 @@ public class AuthService {
 
         return userRepository.findByKakaoId(kakaoId)
                 .map(user -> {
+                    if (user.isDeleted()) {
+                        throw new BusinessException(ErrorCode.WITHDRAWN_USER);
+                    }
                     TokenResponse token = issueAndStoreTokens(user);
                     return Map.<String, Object>of("isNewUser", false, "token", token);
                 })

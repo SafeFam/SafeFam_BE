@@ -213,6 +213,25 @@ class AuthControllerTest {
     }
 
     @Test
+    void kakaoLoginRejectsWithdrawnUser() throws Exception {
+        User user = userRepository.save(User.ofKakao("12345678", "01099999999", "카카오유저"));
+        user.delete();
+        userRepository.save(user);
+
+        when(kakaoClient.getUserInfo(anyString()))
+                .thenReturn(Map.of("id", 12345678L));
+
+        mockMvc.perform(post("/api/v1/auth/kakao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "kakaoAccessToken": "test-token"
+                            }
+                            """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void kakaoSignupCreatesUserAndReturnsToken() throws Exception {
         when(kakaoClient.getUserInfo(anyString()))
                 .thenReturn(Map.of("id", 12345678L));

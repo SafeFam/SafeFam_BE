@@ -127,6 +127,12 @@ public enum ErrorCode {
             "계정이 잠겼습니다. 휴대폰 인증으로 잠금을 해제해 주세요."
     ),
 
+    WITHDRAWN_USER(
+            HttpStatus.FORBIDDEN,
+            "US003",
+            "탈퇴한 계정입니다."
+    ),
+
     DEVICE_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "NO001",
