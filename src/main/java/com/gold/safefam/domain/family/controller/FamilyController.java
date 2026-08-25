@@ -68,12 +68,15 @@ public class FamilyController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "가족 목록 조회", description = "보호자가 연결된 피보호자 목록을 조회합니다.")
+    @Operation(
+            summary = "가족 목록 조회",
+            description = "로그인 사용자가 보호자 또는 피보호자로 참여한 활성 가족 연결을 조회합니다."
+    )
     @GetMapping("/members")
     public ResponseEntity<ApiResponse<List<FamilyMemberResponse>>> getMembers(
-            @AuthenticationPrincipal Long protectorId
+            @AuthenticationPrincipal Long userId
     ) {
-        List<FamilyMemberResponse> members = familyService.getMembers(protectorId);
+        List<FamilyMemberResponse> members = familyService.getMembers(userId);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "가족 목록을 조회했습니다.", members));
     }
 
