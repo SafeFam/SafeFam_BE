@@ -10,6 +10,7 @@ import com.gold.safefam.domain.analysis.dto.AnalysisResponse.UrlThreat;
 import com.gold.safefam.domain.analysis.enums.AnalysisStatus;
 import com.gold.safefam.domain.analysis.enums.IndicatorType;
 import com.gold.safefam.domain.analysis.entity.Analysis;
+import com.gold.safefam.domain.analysis.entity.AnalysisIndicator;
 import com.gold.safefam.domain.analysis.model.MessageRiskAnalysisResult;
 import com.gold.safefam.domain.analysis.service.AnalysisResultFactory;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,7 @@ public class AnalysisResponseMapper {
 
     private static final String FAILED_TRACK_PREFIX =
             "Analysis track unavailable: ";
+    private static final String MATCHED_RULE_PREFIX = "Matched rule: ";
 
     private final AnalysisResultFactory resultFactory;
 
@@ -36,10 +38,9 @@ public class AnalysisResponseMapper {
     public AnalysisResponse toResponse(Analysis analysis) {
         List<Indicator> indicators =
                 analysis.getIndicators().stream()
-                        .map(indicator -> new Indicator(
-                                indicator.getType(),
-                                indicator.getDescription()
-                        ))
+                        .filter(indicator -> indicator.getType()
+                                != IndicatorType.ANALYSIS_TRACK_FAILURE)
+                        .map(this::toPublicIndicator)
                         .toList();
 
         List<EvidenceCard> evidenceCards =
@@ -78,11 +79,8 @@ public class AnalysisResponseMapper {
                 .filter(indicator -> indicator.getType()
                         == IndicatorType.ANALYSIS_TRACK_FAILURE)
                 .map(indicator -> indicator.getDescription())
-                .filter(description -> description != null
-                        && description.startsWith(FAILED_TRACK_PREFIX))
-                .map(description -> description.substring(
-                        FAILED_TRACK_PREFIX.length()
-                ))
+                .filter(description -> description != null)
+                .map(this::normalizeFailedTrack)
                 .filter(description -> !description.isBlank())
                 .distinct()
                 .toList();
@@ -141,6 +139,37 @@ public class AnalysisResponseMapper {
                 action.phoneNumber(),
                 action.url()
         );
+    }
+
+    /** 실패 트랙은 전용 필드로만 노출하고, 일반 지표의 기존 영문 표현은 사용자 문구로 정리한다. */
+    private Indicator toPublicIndicator(AnalysisIndicator indicator) {
+        return new Indicator(
+                indicator.getType(),
+                normalizeIndicatorDescription(indicator.getDescription())
+        );
+    }
+
+    private String normalizeIndicatorDescription(String description) {
+        if (description == null) {
+            return null;
+        }
+        if (description.startsWith(MATCHED_RULE_PREFIX)) {
+            return description.substring(MATCHED_RULE_PREFIX.length()).trim();
+        }
+        return switch (description) {
+            case "Malicious URL detected" -> "위험한 링크가 확인됐습니다.";
+            case "Shortened URL destination was traced" -> "단축 링크의 최종 목적지를 확인했습니다.";
+            case "Malicious domain pattern detected" -> "위험한 링크 형식이 확인됐습니다.";
+            default -> description;
+        };
+    }
+
+    /** 신규 raw token과 과거 영문 접두사 형식을 모두 failedTracks 계약으로 복원한다. */
+    private String normalizeFailedTrack(String description) {
+        String normalized = description.startsWith(FAILED_TRACK_PREFIX)
+                ? description.substring(FAILED_TRACK_PREFIX.length())
+                : description;
+        return normalized.trim();
     }
 
     private String maskSender(String sender) {

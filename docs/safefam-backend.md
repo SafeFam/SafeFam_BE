@@ -207,6 +207,7 @@ Content-Type: application/json
 ```json
 {
   "status": "SUCCESS",
+  "code": null,
   "message": "문자 분석이 완료되었습니다.",
   "data": {
     "analysisId": 101,
@@ -222,12 +223,14 @@ Content-Type: application/json
 ```json
 {
   "status": "ERROR",
+  "code": "AN001",
   "message": "분석 이력을 찾을 수 없습니다.",
   "data": null
 }
 ```
 
 - `status`는 성공 시 `SUCCESS`, 실패 시 `ERROR`를 사용합니다.
+- `code`는 실패 원인을 판별하는 안정적인 `ErrorCode` 식별자이며 성공 시 `null`입니다.
 - `message`는 사용자가 이해할 수 있는 간결한 한국어 문장으로 작성합니다.
 - `data`는 실제 응답 데이터이며, 반환할 데이터가 없으면 `null`을 사용합니다.
 - HTTP 상태 코드를 함께 올바르게 사용합니다. 응답 본문의 `status`만으로 성공·실패를 표현하지 않습니다.
@@ -317,6 +320,7 @@ package com.gold.safefam.global.response;
 
 public record ApiResponse<T>(
         String status,
+        String code,
         String message,
         T data
 ) {
@@ -389,7 +393,7 @@ public enum ErrorCode {
 }
 ```
 
-> 현재 `ApiResponse`는 `status`, `message`, `data` 구조입니다. `ErrorCode.code`를 클라이언트에 전달하려면 팀 합의 후 응답 스키마에 `code` 필드를 추가하고, 백엔드·프론트엔드·API 문서를 한 번에 변경합니다.
+> `ApiResponse.code`는 에러 메시지 문구와 무관하게 클라이언트가 실패 원인을 안정적으로 판별하는 계약입니다. 성공 응답에서는 `null`이고 모든 공통 에러 응답에는 해당 `ErrorCode.code`를 포함합니다.
 
 ### 5.10 Swagger / OpenAPI
 

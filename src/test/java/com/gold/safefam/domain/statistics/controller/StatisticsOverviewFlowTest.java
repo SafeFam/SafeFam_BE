@@ -118,6 +118,36 @@ class StatisticsOverviewFlowTest {
         expectPeriodCounts("ALL", 4, 2);
     }
 
+    /** 처리 중·실패·유형 미분류 이력이 있어도 기간별 집계가 null 그룹에서 실패하지 않는지 확인한다. */
+    @Test
+    void nullResultFieldsAreExcludedFromEveryStatisticsPeriod() throws Exception {
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+
+        savePendingAnalysis(owner.getId(), now.minusHours(3));
+        saveFailedAnalysis(owner.getId(), now.minusHours(2));
+        saveAnalysis(owner.getId(), RiskLevel.HIGH, null, now.minusHours(1));
+        saveAnalysis(owner.getId(), RiskLevel.LOW, PhishingCategory.DELIVERY, now.minusMinutes(30));
+
+        for (String period : new String[]{
+                "LAST_7_DAYS",
+                "LAST_30_DAYS",
+                "LAST_90_DAYS",
+                "ALL"
+        }) {
+            mockMvc.perform(get("/api/v1/statistics/overview")
+                            .header("Authorization", ownerToken)
+                            .param("period", period))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.period").value(period))
+                    .andExpect(jsonPath("$.data.totalAnalysisCount").value(2))
+                    .andExpect(jsonPath("$.data.highRiskCount").value(1))
+                    .andExpect(jsonPath("$.data.categoryDistribution[4].category")
+                            .value("DELIVERY"))
+                    .andExpect(jsonPath("$.data.categoryDistribution[4].count")
+                            .value(1));
+        }
+    }
+
     /** 분석 이력이 없어도 모든 위험 등급과 피싱 유형을 0건으로 반환하는지 확인한다. */
     @Test
     void emptyHistoryReturnsAllBucketsWithZeroCounts() throws Exception {
@@ -182,5 +212,31 @@ class StatisticsOverviewFlowTest {
                 analyzedAt.minusMinutes(1),
                 analyzedAt
         ));
+    }
+
+    private void savePendingAnalysis(Long userId, OffsetDateTime receivedAt) {
+        analysisRepository.save(Analysis.pending(
+                userId,
+                "pending-message",
+                "15881234",
+                HASH,
+                "처리 중인 통계 테스트 문자",
+                AnalysisSource.MANUAL,
+                receivedAt
+        ));
+    }
+
+    private void saveFailedAnalysis(Long userId, OffsetDateTime analyzedAt) {
+        Analysis analysis = Analysis.pending(
+                userId,
+                "failed-message",
+                "15881234",
+                HASH,
+                "실패한 통계 테스트 문자",
+                AnalysisSource.MANUAL,
+                analyzedAt.minusMinutes(1)
+        );
+        analysis.fail("PIPELINE_FAILED", analyzedAt);
+        analysisRepository.save(analysis);
     }
 }

@@ -20,41 +20,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
         ErrorCode errorCode = exception.getErrorCode();
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.error(errorCode.getMessage()));
+                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
     }
 
-    /** JSON 요청 본문의 Bean Validation 실패를 공통 400 입력 오류로 변환한다. */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException() {
-        return ResponseEntity.status(ErrorCode.INVALID_INPUT.getStatus())
-                .body(ApiResponse.error(ErrorCode.INVALID_INPUT.getMessage()));
-    }
-
-    /** 쿼리·경로 파라미터의 메서드 검증 실패를 공통 400 입력 오류로 변환한다. */
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException() {
-        return ResponseEntity.status(ErrorCode.INVALID_INPUT.getStatus())
-                .body(ApiResponse.error(ErrorCode.INVALID_INPUT.getMessage()));
-    }
-
-    /** 파싱할 수 없는 JSON 요청 본문을 공통 400 입력 오류로 변환한다. */
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException() {
-        return ResponseEntity.status(ErrorCode.INVALID_INPUT.getStatus())
-                .body(ApiResponse.error(ErrorCode.INVALID_INPUT.getMessage()));
-    }
-
-    /** 쿼리·경로 파라미터의 타입 변환 실패를 공통 400 입력 오류로 변환한다. */
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch() {
-        return ResponseEntity.status(ErrorCode.INVALID_INPUT.getStatus())
-                .body(ApiResponse.error(ErrorCode.INVALID_INPUT.getMessage()));
+    /** 본문·쿼리·경로 파라미터의 형식 및 Bean Validation 실패를 공통 입력 오류로 변환한다. */
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            ConstraintViolationException.class,
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleInvalidInput() {
+        ErrorCode errorCode = ErrorCode.INVALID_INPUT;
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception exception) {
         log.error("Unhandled exception", exception);
-        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-                .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR.getMessage()));
+        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
     }
 }

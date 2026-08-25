@@ -105,6 +105,13 @@ class AnalysisResultApplyMappingTest {
                                 == IndicatorType.ANALYSIS_TRACK_FAILURE)
                         .count()
         );
+        assertTrue(analysis.getIndicators().stream()
+                .anyMatch(indicator -> indicator.getType()
+                        == IndicatorType.ANALYSIS_TRACK_FAILURE
+                        && indicator.getDescription().equals("URL")));
+        assertFalse(analysis.getIndicators().stream()
+                .anyMatch(indicator -> indicator.getDescription()
+                        .startsWith("Analysis track unavailable:")));
     }
 
     @Test

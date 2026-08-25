@@ -122,7 +122,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(
-                "{\"status\":\"ERROR\",\"message\":\"" + errorCode.getMessage() + "\",\"data\":null}"
+                "{\"status\":\"ERROR\",\"code\":\"" + errorCode.getCode()
+                        + "\",\"message\":\"" + errorCode.getMessage() + "\",\"data\":null}"
         );
     }
 

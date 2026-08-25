@@ -120,6 +120,7 @@ class AuthFlowTest {
         mockMvc.perform(get("/api/v1/users/me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.code").value("AU001"))
                 .andExpect(jsonPath("$.message").value("인증이 필요합니다."))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }

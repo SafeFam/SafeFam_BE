@@ -92,10 +92,51 @@ class AnalysisResponseMapperTest {
                 IndicatorType.ANALYSIS_TRACK_FAILURE,
                 "Analysis track unavailable: TEXT:LLM"
         ));
+        analysis.addIndicator(new AnalysisIndicator(
+                IndicatorType.ANALYSIS_TRACK_FAILURE,
+                "URL:VIRUSTOTAL"
+        ));
 
         AnalysisResponse response = mapper.toResponse(analysis);
 
-        assertEquals(List.of("TEXT:LLM"), response.failedTracks());
+        assertEquals(List.of("TEXT:LLM", "URL:VIRUSTOTAL"), response.failedTracks());
+        assertEquals(List.of(), response.indicators());
+    }
+
+    @Test
+    void removesLegacyInternalPrefixesAndTranslatesBackendGeneratedIndicators() {
+        AnalysisResultFactory resultFactory = mock(AnalysisResultFactory.class);
+        when(resultFactory.recommendedActionsFor(
+                RiskLevel.HIGH,
+                PhishingCategory.OTHER
+        )).thenReturn(List.of());
+
+        AnalysisResponseMapper mapper = new AnalysisResponseMapper(resultFactory);
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        Analysis analysis = new Analysis(
+                1L, "message-1", "15889999", "a".repeat(64),
+                "의심 문자", PhishingCategory.OTHER,
+                AnalysisSource.MANUAL, 80, 70, 75,
+                RiskLevel.HIGH, "위험 신호가 감지됐습니다.",
+                now, now
+        );
+        analysis.addIndicator(new AnalysisIndicator(
+                IndicatorType.AI_EVIDENCE,
+                "Matched rule: 금융기관 명칭 언급"
+        ));
+        analysis.addIndicator(new AnalysisIndicator(
+                IndicatorType.MALICIOUS_URL,
+                "Malicious URL detected"
+        ));
+
+        AnalysisResponse response = mapper.toResponse(analysis);
+
+        assertEquals(
+                List.of("금융기관 명칭 언급", "위험한 링크가 확인됐습니다."),
+                response.indicators().stream()
+                        .map(AnalysisResponse.Indicator::description)
+                        .toList()
+        );
     }
 
     @Test
