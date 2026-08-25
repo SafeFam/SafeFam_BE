@@ -70,6 +70,7 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
             SELECT analysis.riskLevel AS riskLevel, COUNT(analysis) AS count
             FROM Analysis analysis
             WHERE analysis.userId = :userId
+              AND analysis.riskLevel IS NOT NULL
               AND analysis.analyzedAt >= :fromAt
             GROUP BY analysis.riskLevel
             """)
@@ -93,6 +94,7 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
             SELECT analysis.category AS category, COUNT(analysis) AS count
             FROM Analysis analysis
             WHERE analysis.userId = :userId
+              AND analysis.category IS NOT NULL
               AND analysis.analyzedAt >= :fromAt
             GROUP BY analysis.category
             """)

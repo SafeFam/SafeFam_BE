@@ -32,7 +32,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         objectMapper.writeValue(
                 response.getOutputStream(),
-                ApiResponse.error(errorCode.getMessage())
+                ApiResponse.error(errorCode.getCode(), errorCode.getMessage())
         );
     }
 }

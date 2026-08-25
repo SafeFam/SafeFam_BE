@@ -36,7 +36,9 @@ cp .env.example .env
 | `DB_URL` | Spring에서 직접 사용하는 DB JDBC URL (Docker 외부 실행 시) |
 | `DB_USERNAME` / `DB_PASSWORD` | DB 접속 계정 (Docker 외부 실행 시) |
 | `RABBITMQ_PASSWORD` | RabbitMQ 비밀번호 |
-| `RABBITMQ_HOST` | RabbitMQ 호스트 (Docker 외부 실행 시 `localhost`) |
+| `RABBITMQ_URL` | Docker 외부에서 BE/AI를 직접 실행할 때 사용할 RabbitMQ URL (`localhost:5672`) |
+| `RABBITMQ_DOCKER_URL` | Compose 컨테이너 전용 RabbitMQ URL. 비워두면 `RABBITMQ_USERNAME`·`RABBITMQ_PASSWORD`와 `rabbitmq:5672`로 자동 구성 |
+| `RABBITMQ_HOST` | RabbitMQ 호스트 (Docker 외부 실행 시 `localhost`, Compose 내부는 `rabbitmq`) |
 | `JWT_SECRET` | JWT 서명 키 (Base64 인코딩) |
 | `JWT_ACCESS_TOKEN_EXPIRATION` | Access 토큰 만료 시간 (ms, 기본 30분) |
 | `JWT_REFRESH_TOKEN_EXPIRATION` | Refresh 토큰 만료 시간 (ms, 기본 7일) |
@@ -56,6 +58,9 @@ docker compose up --build
 ```
 
 > AI 서버(`SafeFam_AI`)는 `../SafeFam_AI` 경로에 위치해야 합니다.
+>
+> Compose 내부의 BE와 AI는 호스트용 `RABBITMQ_URL`을 사용하지 않고
+> `RABBITMQ_DOCKER_URL` 또는 기본 서비스 주소 `rabbitmq:5672`로 연결합니다.
 
 ## 📑 API 문서
 

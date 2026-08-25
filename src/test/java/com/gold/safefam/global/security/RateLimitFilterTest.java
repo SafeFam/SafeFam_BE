@@ -53,6 +53,7 @@ class RateLimitFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         rateLimitFilter.doFilterInternal(request, response, new MockFilterChain());
         assertThat(response.getStatus()).isEqualTo(429);
+        assertThat(response.getContentAsString()).contains("\"code\":\"C002\"");
         assertThat(response.getContentAsString()).contains("요청 한도를 초과했습니다");
     }
 
@@ -136,6 +137,7 @@ class RateLimitFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         rateLimitFilter.doFilterInternal(request, response, new MockFilterChain());
         assertThat(response.getStatus()).isEqualTo(429);
+        assertThat(response.getContentAsString()).contains("\"code\":\"AN002\"");
         assertThat(response.getContentAsString()).contains("분석 요청 한도를 초과했습니다");
     }
 

@@ -268,6 +268,7 @@ class AuthControllerTest {
                             }
                             """))
                 .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("US002"))
                 .andExpect(jsonPath("$.message").value("계정이 잠겼습니다. 휴대폰 인증으로 잠금을 해제해 주세요."));
     }
 

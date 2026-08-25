@@ -229,11 +229,7 @@ public class AnalysisResultApplyService {
             if (hasText(failedTrack)) {
                 analysis.addIndicator(new AnalysisIndicator(
                         IndicatorType.ANALYSIS_TRACK_FAILURE,
-                        truncate(
-                                "Analysis track unavailable: "
-                                        + failedTrack,
-                                500
-                        )
+                        truncate(failedTrack.trim(), 500)
                 ));
             }
         }
@@ -288,13 +284,13 @@ public class AnalysisResultApplyService {
         if (Boolean.TRUE.equals(url.malicious())) {
             analysis.addIndicator(new AnalysisIndicator(
                     IndicatorType.MALICIOUS_URL,
-                    "Malicious URL detected"
+                    "위험한 링크가 확인됐습니다."
             ));
         } else if (url.tracedUrl() != null
                 && !url.originalUrl().equals(url.tracedUrl())) {
             analysis.addIndicator(new AnalysisIndicator(
                     IndicatorType.SHORTENED_URL,
-                    "Shortened URL destination was traced"
+                    "단축 링크의 최종 목적지를 확인했습니다."
             ));
         }
     }
@@ -320,10 +316,7 @@ public class AnalysisResultApplyService {
             if (hasText(matchedRule)) {
                 analysis.addIndicator(new AnalysisIndicator(
                         IndicatorType.AI_EVIDENCE,
-                        truncate(
-                                "Matched rule: " + matchedRule,
-                                500
-                        )
+                        truncate(matchedRule.trim(), 500)
                 ));
             }
         }
@@ -331,7 +324,7 @@ public class AnalysisResultApplyService {
         if (Boolean.TRUE.equals(ruleAnalysis.maliciousDomainPattern())) {
             analysis.addIndicator(new AnalysisIndicator(
                     IndicatorType.MALICIOUS_URL,
-                    "Malicious domain pattern detected"
+                    "위험한 링크 형식이 확인됐습니다."
             ));
         }
 
