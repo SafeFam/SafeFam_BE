@@ -87,13 +87,13 @@ public class FamilyService {
         link.revoke();
     }
 
-    // ─── 가족 목록 조회 (보호자) ───────────────────────────────
+    // ─── 가족 목록 조회 (보호자·피보호자 공통) ──────────────────
 
-    public List<FamilyMemberResponse> getMembers(Long protectorId) {
+    public List<FamilyMemberResponse> getMembers(Long userId) {
         return familyLinkRepository
-                .findAllByProtectorIdAndStatus(protectorId, FamilyLinkStatus.ACTIVE)
+                .findAllByParticipantIdAndStatus(userId, FamilyLinkStatus.ACTIVE)
                 .stream()
-                .map(FamilyMemberResponse::from)
+                .map(link -> FamilyMemberResponse.from(link, userId))
                 .toList();
     }
 

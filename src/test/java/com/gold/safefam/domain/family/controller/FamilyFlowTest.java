@@ -101,20 +101,34 @@ class FamilyFlowTest {
                         .header("Authorization", "Bearer " + guardianToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].memberId").value(wardId))
+                .andExpect(jsonPath("$.data[0].memberName").value("피보호자"))
+                .andExpect(jsonPath("$.data[0].memberRole").value("WARD"))
                 .andExpect(jsonPath("$.data[0].wardId").value(wardId))
                 .andReturn();
+
+        // 5. 피보호자도 같은 연결에서 보호자를 가족으로 조회
+        mockMvc.perform(get("/api/v1/family/members")
+                        .header("Authorization", "Bearer " + wardToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].memberId").value(guardianId))
+                .andExpect(jsonPath("$.data[0].memberName").value("보호자"))
+                .andExpect(jsonPath("$.data[0].memberRole").value("PROTECTOR"))
+                .andExpect(jsonPath("$.data[0].wardId").value(wardId));
 
         String linkIdStr = com.jayway.jsonpath.JsonPath.read(
                 listResult.getResponse().getContentAsString(),
                 "$.data[0].linkId"
         ).toString();
 
-        // 5. 보호자가 연결 해제
+        // 6. 보호자가 연결 해제
         mockMvc.perform(delete("/api/v1/family/" + linkIdStr)
                         .header("Authorization", "Bearer " + guardianToken))
                 .andExpect(status().isNoContent());
 
-        // 6. REVOKED 상태 확인
+        // 7. REVOKED 상태 확인
         transactionTemplate.executeWithoutResult(status -> {
             FamilyLink link = familyLinkRepository.findById(Long.parseLong(linkIdStr)).orElseThrow();
             assertEquals(FamilyLinkStatus.REVOKED, link.getStatus());
