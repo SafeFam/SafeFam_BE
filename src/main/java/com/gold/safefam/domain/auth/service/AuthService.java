@@ -99,7 +99,7 @@ public class AuthService {
     이전 Refresh Token은 다시 사용할 수 없음
      */
 
-    @Transactional
+    @Transactional(noRollbackFor = BusinessException.class)
     public TokenResponse reissue(String refreshTokenValue) {
         try {
             jwtUtil.validateTokenType(refreshTokenValue, TokenType.REFRESH);
