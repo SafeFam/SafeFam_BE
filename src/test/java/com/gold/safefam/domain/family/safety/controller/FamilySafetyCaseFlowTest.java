@@ -18,6 +18,8 @@ import com.gold.safefam.domain.family.safety.service.FamilySafetyCaseService;
 import com.gold.safefam.domain.family.service.FamilyNotificationService;
 import com.gold.safefam.domain.user.entity.User;
 import com.gold.safefam.domain.user.repository.UserRepository;
+import com.gold.safefam.global.exception.BusinessException;
+import com.gold.safefam.global.exception.ErrorCode;
 import com.gold.safefam.global.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -160,6 +163,16 @@ class FamilySafetyCaseFlowTest {
         assertEquals(FamilySafetyStatus.SAFE_CONFIRMED, resolved.getStatus());
         assertThat(resolved.getResolvedAt()).isNotNull();
         assertThat(resolved.getNextReminderAt()).isNull();
+    }
+
+    @Test
+    void createForHighRiskRejectsAnalysisNotOwnedByWard() {
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> safetyCaseService.createForHighRisk(guardianId, analysisId)
+        );
+
+        assertEquals(ErrorCode.FAMILY_SAFETY_INVALID_ANALYSIS, exception.getErrorCode());
     }
 
     @Test

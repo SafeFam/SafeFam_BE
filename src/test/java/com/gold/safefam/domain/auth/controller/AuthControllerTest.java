@@ -213,6 +213,25 @@ class AuthControllerTest {
     }
 
     @Test
+    void kakaoLoginRejectsWithdrawnUser() throws Exception {
+        User user = userRepository.save(User.ofKakao("12345678", "01099999999", "카카오유저"));
+        user.delete();
+        userRepository.save(user);
+
+        when(kakaoClient.getUserInfo(anyString()))
+                .thenReturn(Map.of("id", 12345678L));
+
+        mockMvc.perform(post("/api/v1/auth/kakao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "kakaoAccessToken": "test-token"
+                            }
+                            """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void kakaoSignupCreatesUserAndReturnsToken() throws Exception {
         when(kakaoClient.getUserInfo(anyString()))
                 .thenReturn(Map.of("id", 12345678L));
@@ -237,6 +256,41 @@ class AuthControllerTest {
                             """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+    }
+
+    @Test
+    void kakaoSignupRejectsWithdrawnUser() throws Exception {
+        User user = userRepository.save(new User(
+                "01012345678",
+                passwordEncoder.encode("safefam12"),
+                "탈퇴회원"
+        ));
+        user.delete();
+        userRepository.save(user);
+
+        when(kakaoClient.getUserInfo(anyString()))
+                .thenReturn(Map.of("id", 12345678L));
+
+        PhoneVerification verification = new PhoneVerification(
+                "01012345678",
+                passwordEncoder.encode("123456"),
+                Instant.now().plusSeconds(180),
+                Instant.now()
+        );
+        verification.markVerified(Instant.now());
+        phoneVerificationRepository.save(verification);
+
+        mockMvc.perform(post("/api/v1/auth/kakao/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "kakaoAccessToken": "test-token",
+                              "phoneNumber": "010-1234-5678",
+                              "name": "탈퇴회원"
+                            }
+                            """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("탈퇴한 계정입니다."));
     }
 
     @Test

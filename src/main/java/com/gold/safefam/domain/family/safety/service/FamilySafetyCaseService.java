@@ -177,7 +177,7 @@ public class FamilySafetyCaseService {
 
     private FamilySafetyNotificationTarget createNewCase(Long wardId, Analysis analysis) {
         if (!analysis.getUserId().equals(wardId) || analysis.getRiskLevel() != RiskLevel.HIGH) {
-            throw new IllegalArgumentException("Only the ward's HIGH analysis can create a safety case");
+            throw new BusinessException(ErrorCode.FAMILY_SAFETY_INVALID_ANALYSIS);
         }
 
         User ward = findUser(wardId);
