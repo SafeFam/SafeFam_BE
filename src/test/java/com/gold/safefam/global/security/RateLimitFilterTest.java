@@ -202,6 +202,7 @@ class RateLimitFilterTest {
 
     @AfterEach
     void tearDown() {
+        rateLimitFilter.destroy();
         SecurityContextHolder.clearContext();
     }
 }

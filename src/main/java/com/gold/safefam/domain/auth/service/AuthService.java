@@ -201,6 +201,10 @@ public class AuthService {
         User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseGet(() -> userRepository.save(User.ofKakao(kakaoId, phoneNumber, request.name())));
 
+        if (user.isDeleted()) {
+            throw new BusinessException(ErrorCode.WITHDRAWN_USER);
+        }
+
         if (user.getKakaoId() != null && !user.getKakaoId().equals(kakaoId)) {
             throw new BusinessException(ErrorCode.KAKAO_ALREADY_LINKED);
         }

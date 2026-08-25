@@ -259,6 +259,41 @@ class AuthControllerTest {
     }
 
     @Test
+    void kakaoSignupRejectsWithdrawnUser() throws Exception {
+        User user = userRepository.save(new User(
+                "01012345678",
+                passwordEncoder.encode("safefam12"),
+                "탈퇴회원"
+        ));
+        user.delete();
+        userRepository.save(user);
+
+        when(kakaoClient.getUserInfo(anyString()))
+                .thenReturn(Map.of("id", 12345678L));
+
+        PhoneVerification verification = new PhoneVerification(
+                "01012345678",
+                passwordEncoder.encode("123456"),
+                Instant.now().plusSeconds(180),
+                Instant.now()
+        );
+        verification.markVerified(Instant.now());
+        phoneVerificationRepository.save(verification);
+
+        mockMvc.perform(post("/api/v1/auth/kakao/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "kakaoAccessToken": "test-token",
+                              "phoneNumber": "010-1234-5678",
+                              "name": "탈퇴회원"
+                            }
+                            """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("탈퇴한 계정입니다."));
+    }
+
+    @Test
     void loginLocksAccountAfterFiveFailures() throws Exception {
         userRepository.save(new User(
                 "01012345678",

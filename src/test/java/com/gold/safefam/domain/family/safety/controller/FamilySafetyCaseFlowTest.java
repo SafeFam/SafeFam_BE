@@ -19,6 +19,7 @@ import com.gold.safefam.domain.family.service.FamilyNotificationService;
 import com.gold.safefam.domain.user.entity.User;
 import com.gold.safefam.domain.user.repository.UserRepository;
 import com.gold.safefam.global.exception.BusinessException;
+import com.gold.safefam.global.exception.ErrorCode;
 import com.gold.safefam.global.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -166,8 +167,12 @@ class FamilySafetyCaseFlowTest {
 
     @Test
     void createForHighRiskRejectsAnalysisNotOwnedByWard() {
-        assertThrows(BusinessException.class,
-                () -> safetyCaseService.createForHighRisk(guardianId, analysisId));
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> safetyCaseService.createForHighRisk(guardianId, analysisId)
+        );
+
+        assertEquals(ErrorCode.FAMILY_SAFETY_INVALID_ANALYSIS, exception.getErrorCode());
     }
 
     @Test
