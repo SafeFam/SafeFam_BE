@@ -36,6 +36,7 @@ public class AuthService {
     private final KakaoClient kakaoClient;
     private final PhoneVerificationService phoneVerificationService;
     private final UserService userService;
+    private final RefreshTokenRevocationService refreshTokenRevocationService;
 
     // 회원가입
     @Transactional
@@ -99,7 +100,7 @@ public class AuthService {
     이전 Refresh Token은 다시 사용할 수 없음
      */
 
-    @Transactional(noRollbackFor = BusinessException.class)
+    @Transactional
     public TokenResponse reissue(String refreshTokenValue) {
         try {
             jwtUtil.validateTokenType(refreshTokenValue, TokenType.REFRESH);
@@ -116,7 +117,7 @@ public class AuthService {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
             if (user.isDeleted()) {
-                refreshTokenRepository.delete(storedToken);
+                refreshTokenRevocationService.revokeByUserId(userId);
                 throw new BusinessException(ErrorCode.INVALID_TOKEN);
             }
             return issueAndStoreTokens(user);
