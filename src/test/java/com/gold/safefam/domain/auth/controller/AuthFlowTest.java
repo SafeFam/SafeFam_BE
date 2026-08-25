@@ -90,6 +90,32 @@ class AuthFlowTest {
     }
 
     @Test
+    void loginRejectsWithdrawnUser() throws Exception {
+        User user = saveUser();
+        user.delete();
+        userRepository.save(user);
+
+        login("01012345678", "safefam12")
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void reissueRejectsWithdrawnUser() throws Exception {
+        saveUser();
+        MvcResult loginResult = login("01012345678", "safefam12")
+                .andExpect(status().isOk())
+                .andReturn();
+        String refreshToken = read(loginResult, "$.data.refreshToken");
+
+        User user = userRepository.findByPhoneNumber("01012345678").orElseThrow();
+        user.delete();
+        userRepository.save(user);
+
+        reissue(refreshToken).andExpect(status().isUnauthorized());
+        assertTrue(refreshTokenRepository.findByUserId(user.getId()).isEmpty());
+    }
+
+    @Test
     void protectedApiRejectsRequestWithoutAccessToken() throws Exception {
         mockMvc.perform(get("/api/v1/users/me"))
                 .andExpect(status().isUnauthorized())

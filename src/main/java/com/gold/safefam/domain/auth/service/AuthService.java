@@ -36,6 +36,7 @@ public class AuthService {
     private final KakaoClient kakaoClient;
     private final PhoneVerificationService phoneVerificationService;
     private final UserService userService;
+    private final RefreshTokenRevocationService refreshTokenRevocationService;
 
     // 회원가입
     @Transactional
@@ -67,6 +68,10 @@ public class AuthService {
     public TokenResponse login(LoginRequest request) {
         User user = userRepository.findByPhoneNumber(normalizePhoneNumber(request.phoneNumber()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
+
+        if (user.isDeleted()) {
+            throw new BusinessException(ErrorCode.WITHDRAWN_USER);
+        }
 
         if (user.isLocked()) {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
@@ -111,6 +116,10 @@ public class AuthService {
 
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
+            if (user.isDeleted()) {
+                refreshTokenRevocationService.revokeByUserId(userId);
+                throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            }
             return issueAndStoreTokens(user);
         } catch (BusinessException exception) {
             throw exception;
@@ -169,6 +178,9 @@ public class AuthService {
 
         return userRepository.findByKakaoId(kakaoId)
                 .map(user -> {
+                    if (user.isDeleted()) {
+                        throw new BusinessException(ErrorCode.WITHDRAWN_USER);
+                    }
                     TokenResponse token = issueAndStoreTokens(user);
                     return Map.<String, Object>of("isNewUser", false, "token", token);
                 })
@@ -188,6 +200,10 @@ public class AuthService {
 
         User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseGet(() -> userRepository.save(User.ofKakao(kakaoId, phoneNumber, request.name())));
+
+        if (user.isDeleted()) {
+            throw new BusinessException(ErrorCode.WITHDRAWN_USER);
+        }
 
         if (user.getKakaoId() != null && !user.getKakaoId().equals(kakaoId)) {
             throw new BusinessException(ErrorCode.KAKAO_ALREADY_LINKED);

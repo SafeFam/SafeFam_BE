@@ -32,6 +32,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/api/v1/analyses"
     };
 
+    private static final String[] FAMILY_LINK_RATE_LIMITED_PATHS = {
+            "/api/v1/family/link/code"
+    };
+
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> lastAccess = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -84,6 +88,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 for (String limited : USER_RATE_LIMITED_PATHS) {
                     if (path.equals(limited)) {
                         bucketKey = "user:" + resolveUserId();
+                        break;
+                    }
+                }
+            }
+
+            if (bucketKey == null) {
+                for (String limited : FAMILY_LINK_RATE_LIMITED_PATHS) {
+                    if (path.equals(limited)) {
+                        bucketKey = "family-link:" + resolveUserId();
                         break;
                     }
                 }

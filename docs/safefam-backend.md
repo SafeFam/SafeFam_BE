@@ -185,6 +185,11 @@ Authorization: Bearer {accessToken}
   - `POST /api/v1/auth/signup`
   - `POST /api/v1/auth/login`
   - `POST /api/v1/auth/reissue`
+  - `POST /api/v1/auth/phone-verifications/**`
+  - `POST /api/v1/auth/kakao`
+  - `POST /api/v1/auth/kakao/signup`
+  - `POST /api/v1/auth/password/reset`
+  - `POST /api/v1/auth/unlock`
 - 로그아웃 API는 인증이 필요합니다.
 
 ### 5.3 Content-Type
